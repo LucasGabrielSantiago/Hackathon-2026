@@ -317,7 +317,7 @@ Perguntas que levamos para o(a) validador(a) do Movimento Pró-Criança:
 |---|---|---|
 | `<nome>` | Back-end | `@<usuario>` |
 | `<nome>` | Front-end | `@<usuario>` |
-| `<nome>` | DevOps / Testes | `@<usuario>` |
+| `Lucas Gabriel Santiago` | DevOps / Testes | `@<usuario>` |
 | `<nome>` | Dados / IA | `@<usuario>` |
 | `<nome>` | Validador(a) — Movimento Pró-Criança | — |
 
