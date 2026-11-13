@@ -43,10 +43,12 @@ export default function SolicitarColeta() {
           <div className="entre"><p className="rp-card-titulo">Pedido #{p.id}</p><StatusPedido status={p.status} /></div>
           <RecyclingProgress status={p.status} />
           <p className="rp-card-texto">{p.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material]} ${m.quantidade_kg} kg`).join(' · ')} · {p.janela_horario}</p>
-          {p.status === 'aceito' && (
+          {p.qr_code && (
             <div className="rp-qr" style={{ padding: 'var(--espaco-4)' }}>
-              <QRCodeSVG value={p.qr_code} size={150} title="QR Code do pedido" />
-              <p className="rp-card-texto">Mostre este código ao catador na coleta.</p>
+              <QRCodeSVG value={p.qr_code} size={160} fgColor="#27332D" bgColor="#FFFFFF" title="QR Code do pedido" />
+              <p className="rp-card-texto">
+                {p.status === 'aceito' ? 'O catador está a caminho. Mostre este código na coleta.' : 'Guarde este código: o catador vai pedir na hora da coleta.'}
+              </p>
               <span className="rp-qr-codigo">{p.qr_code}</span>
             </div>
           )}

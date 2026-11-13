@@ -29,7 +29,7 @@ export default function Mapa() {
           {pontos.length === 0 && <EmptyState titulo="Nenhum ponto para esse material" texto="Tente outro filtro ou peça a coleta em casa." acao={<Link className="rp-btn rp-btn-primario" to="/morador/coleta">Pedir coleta</Link>} />}
           <div className="pilha">
             {pontos.map((p) => (
-              <CollectionPointCard key={p.id} ponto={p} acao={<Link className="rp-btn rp-btn-secundario" to="/morador/carteira">Gerar QR para entregar</Link>} />
+              <CollectionPointCard key={p.id} ponto={p} acao={<Link className="rp-btn rp-btn-secundario" to="/morador/carteira?gerar=1">Gerar QR para entregar</Link>} />
             ))}
           </div>
           {pontos.some((p) => p.demo) && <Alert tipo="aviso" titulo="Pontos de demonstração">Os pontos marcados como Demonstração são fictícios.</Alert>}
