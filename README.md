@@ -1,277 +1,226 @@
-# ♻️ Canal Limpo
+# ♻️ Recicla PE
 
-> **Lixo no lugar certo não vai parar no canal.**
+<p align="center"><img src="frontend/public/logo.svg" alt="Logo Recicla PE" width="90" /></p>
+
+> **Reciclar gera renda. Cuidar transforma cidades.**
 > Solução do desafio **Antena na Lama** — Hackathon APONTI Academy: Devs Criam com IA (REC'n'Play 2026)
-> Caminho escolhido: **Prevenir e cuidar**
+> **Equipe 2** · Caminho escolhido: **Prevenir e cuidar**
 
-🔗 **Deploy:** `https://<inserir-url-do-deploy>`
+🔗 **Front-end (Vercel):** `<inserir-link-após-deploy>`
+🔗 **API Back-end (Render):** `<inserir-link-após-deploy>`
 🎥 **Demo / Pitch:** `<inserir-link>`
+
+| Nome | O que é |
+|---|---|
+| **Recicla PE** | A plataforma (pensada para todo o estado de Pernambuco) |
+| **Recicla Recife** | A iniciativa no primeiro município piloto |
+| **Bolsa Reciclagem** | O programa de incentivo financeiro (créditos por kg) |
+| **Índice Canal Limpo** | Os indicadores de impacto socioambiental |
+
+📘 O contexto completo do projeto (regras de negócio, perfis, modelo de dados) está no **[CONTEXT.md](./CONTEXT.md)**.
 
 ---
 
-## 📌 Sumário
+## 🗂️ Cartão da Ideia
 
-- [O problema](#-o-problema)
-- [A solução](#-a-solução)
-- [Perfis de usuário](#-perfis-de-usuário)
-- [Fluxos principais](#-fluxos-principais)
-- [Funcionalidades](#-funcionalidades)
-- [Recompensa (cashback)](#-recompensa-cashback)
-- [Onde a IA entra](#-onde-a-ia-entra)
-- [Arquitetura e stack](#-arquitetura-e-stack)
-- [Modelo de dados](#-modelo-de-dados)
-- [Como rodar localmente](#-como-rodar-localmente)
-- [Testes e CI](#-testes-e-ci)
-- [Uso de IA no desenvolvimento](#-uso-de-ia-no-desenvolvimento)
-- [Validação com o(a) validador(a)](#-validação-com-oa-validadora)
-- [Próximos passos](#-próximos-passos)
-- [Equipe](#-equipe)
+| Campo | Resposta |
+|---|---|
+| **Equipe** | Equipe 2: Ícalo Ricardo, Lucas Gabriel Santiago, Maria Lucília e Niedja Brasil · Validador: Caio B. Alves |
+| **Caminho** | Prevenir e cuidar |
+| **Nossa ideia em uma frase** | Criamos um aplicativo que facilita o descarte adequado do lixo reciclável para toda a população, com recompensa por kg e coleta em casa feita por catadores cadastrados. |
+| **Público principal** | Toda a população da Região Metropolitana do Recife |
+| **O que ouvimos do validador** | A grande quantidade de lixo descartado no meio ambiente traz consequências predatórias para o próprio ambiente, e falta local disponível para o descarte adequado. Com isso, o descarte inadequado contribui para os alagamentos. |
+| **Dados que vamos usar** | Referência: o sistema de coleta e reciclagem da Noruega (retorno de embalagens com recompensa). Dados fictícios para a demonstração; fontes públicas em pesquisa (Prefeitura do Recife/Emlurb, ecoestações). |
+| **Indicador de resultado** | Quantidade de lixo coletado por bairro, mês a mês — o **Índice Canal Limpo**. |
 
 ---
 
 ## 🌧️ O problema
 
-Na Região Metropolitana do Recife, todo ano a chuva forte vira alagamento, e um dos motivos é o **lixo descartado de forma irregular**, que entope galerias, canais e rios. Só em 2026 a Emlurb já tirou mais de 21 mil toneladas de lixo de 40 canais do Recife.
+Na Região Metropolitana do Recife, o lixo descartado de forma irregular entope galerias, canais e rios e piora os alagamentos. Só em 2026 a Emlurb já tirou mais de 21 mil toneladas de lixo de 40 canais do Recife.
 
-Boa parte dos moradores:
-
-- **não sabe separar** o lixo (o que é reciclável, como preparar, o que tem valor);
-- **não sabe onde entregar**, ou o ponto de coleta fica longe;
-- **não vê vantagem** em separar e levar o lixo.
+Boa parte da população não sabe separar o lixo, não tem um ponto de entrega perto e não vê vantagem em separar. Ao mesmo tempo, os catadores enfrentam baixa renda e pouco acesso a oportunidades.
 
 ## 💡 A solução
 
-O **Canal Limpo** é um app de celular (PWA) que **incentiva o morador a separar e entregar seus recicláveis**, com **recompensa em dinheiro/cashback por kg** de cada material.
+O **Recicla PE** conecta moradores, catadores, pontos de coleta e poder público:
 
-O morador tem duas opções:
+1. 📸 O morador **fotografa o resíduo** e a IA diz qual é o material, se é reciclável e como preparar.
+2. 🗺️ Ele **entrega num ponto de coleta** do mapa ou **pede a coleta em casa** para um catador cadastrado.
+3. ⚖️ O ponto **pesa o material** e confirma a entrega por QR Code.
+4. 💰 O morador recebe créditos da **Bolsa Reciclagem**, e o catador recebe **sua remuneração à parte**.
+5. 📊 Tudo vira dado no **Índice Canal Limpo**, por bairro e por município.
 
-1. **Levar até um ponto de coleta** cadastrado; ou
-2. **Pedir a coleta em casa** para um(a) **catador(a)/trabalhador(a) de material reciclável** cadastrado(a) na plataforma.
+O catador também pode **cadastrar o próprio ponto de coleta**, recebendo doações ou comprando material.
 
-A IA ajuda o morador a **identificar e separar o resíduo por foto** e a **estimar o valor** antes da entrega.
-
-> Cada quilo que chega no ponto de coleta é um quilo a menos no canal.
-
----
-
-## 👥 Perfis de usuário
-
-| Perfil | Quem é | O que faz no app |
-|---|---|---|
-| **Morador(a)** | Qualquer pessoa da RMR | Classifica o lixo com a IA, encontra pontos, entrega ou agenda coleta em casa e acumula cashback |
-| **Catador(a) / Coletor(a)** | Trabalhador(a) de material reciclável, autônomo(a) ou de cooperativa | Recebe pedidos de coleta perto dele(a), busca na casa do morador, leva ao ponto e é remunerado(a) |
-| **Ponto de coleta** | Ecoestação, cooperativa, comércio parceiro ou associação de bairro | Confere e pesa o material, confirma a entrega por QR code e libera o crédito |
-| **Admin** | Equipe do projeto | Gerencia a tabela de preços por kg, aprova cadastros de pontos e catadores e acompanha os indicadores |
+> Lixo no lugar certo não vai parar no canal.
 
 ---
 
-## 🔄 Fluxos principais
+## 👥 Perfis no MVP
 
-### 1. Entrega direta no ponto de coleta
-
-```
-Morador fotografa o resíduo
-  → IA identifica o material (plástico, metal, vidro, papel) e explica como preparar
-  → App mostra o valor estimado e os pontos de coleta mais próximos no mapa
-  → Morador vai ao ponto e mostra seu QR code
-  → Ponto pesa o material por tipo e registra no app
-  → Cashback creditado na carteira do morador
-```
-
-### 2. Coleta em casa pelo catador
-
-```
-Morador cria um pedido de coleta (tipos de material, peso estimado, endereço, janela de horário)
-  → Catadores próximos recebem o pedido e um deles aceita
-  → Catador busca o material na casa do morador e confirma pelo QR code do pedido
-  → Catador leva o material até um ponto de coleta
-  → Ponto pesa e confirma a entrega
-  → Crédito é dividido: parte para o morador e parte para o catador
-```
-
-> A pesagem **sempre** acontece no ponto de coleta. Isso evita fraude e garante que o valor pago corresponde ao material que realmente chegou.
-
----
-
-## ✨ Funcionalidades
-
-### Cadastro e autenticação
-- [ ] Cadastro de **morador**: nome, telefone/e-mail, endereço/bairro e senha
-- [ ] Cadastro de **catador(a)**: nome, telefone, área de atuação (bairros/raio), cooperativa (opcional), materiais que coleta e disponibilidade
-- [ ] Cadastro de **ponto de coleta**: nome, endereço, localização (lat/long), horário de funcionamento, materiais aceitos e responsável
-- [ ] Login com perfil (morador / catador / ponto / admin)
-- [ ] Aprovação de catadores e pontos pelo admin
-
-### Morador
-- [ ] 📸 **Classificação por foto com IA** + instruções de preparo
-- [ ] 💰 Estimativa de valor pela tabela de preço por kg
-- [ ] 🗺️ Mapa dos pontos de coleta mais próximos
-- [ ] 🚚 Pedido de coleta em casa
-- [ ] 👛 Carteira: saldo, extrato e histórico de entregas
-- [ ] 🌊 Painel de impacto: "você evitou X kg de lixo nos canais"
-
-### Catador(a)
-- [ ] Lista/mapa de pedidos de coleta próximos
-- [ ] Aceitar, iniciar e concluir coleta (com QR code)
-- [ ] Ganhos e histórico
-
-### Ponto de coleta
-- [ ] Leitura do QR code do morador ou do pedido
-- [ ] Registro do peso por tipo de material
-- [ ] Confirmação da entrega (gera o crédito)
-
-### Admin
-- [ ] Tabela de preços por kg (plástico, metal, vidro, papel)
-- [ ] Gestão de cadastros
-- [ ] Indicadores: kg coletado por bairro e por material, usuários ativos
-
----
-
-## 💸 Recompensa (cashback)
-
-O valor é calculado **por kg de cada material**, a partir de uma tabela configurável:
-
-| Material | Valor por kg (exemplo) |
+| Perfil | O que faz |
 |---|---|
-| Metal (alumínio) | R$ 5,00 |
-| Plástico (PET/PEAD) | R$ 1,50 |
-| Papel/papelão | R$ 0,50 |
-| Vidro | R$ 0,20 |
+| **Morador** | Classifica resíduos, vê o mapa, pede coleta, gera QR Code de entrega, acompanha a carteira |
+| **Catador** | Vê pedidos próximos (após aprovação), aceita, confirma a coleta, cadastra ponto próprio, acompanha ganhos |
+| **Ponto de coleta** | Registra a pesagem e confirma a entrega |
+| **Admin** | Aprova catadores e pontos, gerencia preços e vê o Índice Canal Limpo |
 
-> ⚠️ Valores **fictícios**, só para demonstração. Na versão real eles seguem o preço de compra das cooperativas e recicladoras.
-
-**Divisão na coleta em casa (proposta):** 70% para o catador e 30% para o morador. Quem trabalha mais recebe mais, e o morador continua tendo incentivo.
-
-**De onde vem o dinheiro?**
-- Venda do material para cooperativas e recicladoras;
-- Parcerias com programas que já existem (ex.: o Vale Luz, da Neoenergia Pernambuco);
-- Cupons e descontos do comércio local;
-- Apoio de prefeituras e empresas (ESG / logística reversa).
+Planejados (Fase 2+): cooperativa, empresa parceira e gestor público.
 
 ---
 
-## 🤖 Onde a IA entra
-
-| Funcionalidade | Como a IA é usada |
-|---|---|
-| **Classificação por foto** | Um modelo de visão identifica o material do resíduo e retorna tipo, se é reciclável e como preparar (lavar, amassar, separar a tampa) |
-| **Educação contextual** | Explica em linguagem simples por que aquele item não deve ir para a rua ou para o canal |
-| **Estimativa de peso/valor** | Sugere um peso aproximado a partir da foto e da quantidade informada (o valor final sempre vem da pesagem no ponto) |
-| *(futuro)* **Denúncia de lixo em canal** | Foto + localização → IA classifica o tipo de descarte → mapa de calor para a prefeitura |
-
-**Cuidados éticos:**
-- A IA **não decide pagamentos**: o crédito só é liberado depois da pesagem real no ponto de coleta.
-- Fotos não são guardadas além do necessário para a classificação (LGPD).
-- Quando a IA não tem certeza, o app mostra a dúvida e pede confirmação do usuário.
-
----
-
-## 🏗️ Arquitetura e stack
+## 🏗️ Estrutura do repositório
 
 ```
-┌──────────────────────────┐        ┌──────────────────────────┐
-│  Frontend (PWA mobile)   │  HTTP  │        Backend API       │
-│  Next.js + TypeScript    │ ─────► │   FastAPI (Python)       │
-│  Tailwind · Leaflet      │        │   Auth JWT · Regras      │
-└──────────────────────────┘        └──────┬──────────┬────────┘
-                                           │          │
-                                    ┌──────▼───┐  ┌───▼──────────┐
-                                    │PostgreSQL│  │ API de visão │
-                                    │          │  │ (LLM com IA) │
-                                    └──────────┘  └──────────────┘
+├── CONTEXT.md              # contexto e regras do projeto (ler primeiro)
+├── CONTRIBUTING.md         # como contribuir
+├── docs/                   # arquitetura, regras, modelo de dados, roadmap
+├── .github/workflows/      # CI (testes do back e do front + build)
+├── backend/                # Node.js + Express (API REST)
+│   ├── src/
+│   │   ├── app.js          # monta a API (usado pelos testes)
+│   │   ├── server.js       # inicia o servidor
+│   │   ├── config/         # variáveis de ambiente
+│   │   ├── middlewares/    # JWT, perfis (RBAC), erros, limite de login
+│   │   ├── routes/         # auth, pontos, catadores, pedidos, entregas, carteira, classificar, indicadores
+│   │   ├── services/       # regras de negócio (recompensa, QR Code, status, transações, IA)
+│   │   └── db/             # repositório em memória + seeds de demonstração
+│   └── tests/              # node:test
+└── frontend/               # React 18 + Vite
+    └── src/
+        ├── services/api.js # chamadas à API
+        ├── context/        # login e perfil do usuário
+        ├── components/     # Layout, Mapa, RotaProtegida, AvisoDemo
+        ├── pages/          # publico/, morador/, catador/, ponto/, admin/
+        └── __tests__/      # Vitest + Testing Library
 ```
+
+Detalhes em [docs/ARQUITETURA.md](./docs/ARQUITETURA.md).
 
 | Camada | Tecnologia |
 |---|---|
-| Frontend | Next.js 14, TypeScript, Tailwind CSS, Leaflet (mapa), leitor de QR code |
-| Backend | Python, FastAPI, SQLAlchemy, Pydantic |
-| Banco | PostgreSQL |
-| IA | API de LLM multimodal (visão) |
-| Testes | Pytest (backend) · Vitest/Jest (frontend) |
-| CI/CD | GitHub Actions |
-| Deploy | `<Vercel / Render / Railway>` |
-
----
-
-## 🗃️ Modelo de dados
-
-```
-Usuario (id, nome, email, telefone, senha_hash, perfil[morador|catador|ponto|admin], criado_em)
-
-Morador (id, usuario_id, endereco, bairro, lat, lng, saldo)
-
-Catador (id, usuario_id, cooperativa, raio_atuacao_km, bairros[], materiais[], disponivel, aprovado)
-
-PontoColeta (id, usuario_id, nome, endereco, lat, lng, horario, materiais_aceitos[], aprovado)
-
-Material (id, nome[plastico|metal|vidro|papel], preco_kg)
-
-PedidoColeta (id, morador_id, catador_id?, endereco, janela_horario,
-              materiais_estimados[], status[aberto|aceito|coletado|entregue|cancelado], qr_code)
-
-Entrega (id, morador_id, catador_id?, ponto_id, pedido_id?, criado_em)
-
-ItemEntrega (id, entrega_id, material_id, peso_kg, valor)
-
-Transacao (id, usuario_id, entrega_id, valor, tipo[credito|resgate], criado_em)
-```
+| Front-end | React 18, Vite, React Router, Leaflet (mapa), qrcode.react, CSS mobile-first acessível |
+| Back-end | Node.js, Express, JWT, bcrypt, Multer (upload em memória) |
+| Banco | Em memória no MVP (com seeds de demonstração) → PostgreSQL na Fase 2 |
+| IA | API multimodal de visão (opcional) + classificador de reserva por texto |
+| Testes | node:test (back-end) · Vitest + React Testing Library (front-end) |
+| CI/CD | GitHub Actions · Vercel (front) · Render (back) |
 
 ---
 
 ## 🚀 Como rodar localmente
 
-### Pré-requisitos
-- Node.js 20+
-- Python 3.11+
-- PostgreSQL (ou Docker)
+Pré-requisito: **Node.js 18+**.
 
-### Backend
+### 1. Back-end
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate        # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env             # preencha DATABASE_URL e AI_API_KEY
-uvicorn app.main:app --reload
+npm install
+cp .env.example .env        # Windows PowerShell: copy .env.example .env
+npm run dev                 # http://localhost:3001/api/health
 ```
 
-### Frontend
+### 2. Front-end (outro terminal)
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local       # NEXT_PUBLIC_API_URL=http://localhost:8000
-npm run dev
+cp .env.example .env        # Windows PowerShell: copy .env.example .env
+npm run dev                 # http://localhost:5173
 ```
 
-Acesse `http://localhost:3000` (de preferência no modo mobile do navegador).
+### Contas de demonstração
+
+Senha de todas: `demo1234`
+
+| Perfil | E-mail |
+|---|---|
+| Morador | morador@reciclape.demo |
+| Catador (já aprovado) | catador@reciclape.demo |
+| Ponto de coleta | ponto@reciclape.demo |
+| Admin | admin@reciclape.demo |
+
+> ⚠️ O MVP guarda os dados **em memória**: ao reiniciar o back-end, tudo volta ao estado inicial de demonstração.
+
+### Roteiro de demonstração
+
+1. **Morador**: Classificar → "latinha de refrigerante" → Carteira → **Gerar QR Code** (copie o código).
+2. **Ponto**: Registrar pesagem → cole o código → Metal 2 kg → **Confirmar** → R$ 10,00 para o morador.
+3. **Morador**: Pedir coleta em casa.
+4. **Catador**: Aceitar o pedido → digitar o código do QR que aparece em "Meus pedidos" do morador → Confirmar coleta.
+5. **Ponto**: Registrar pesagem → Coleta em casa → número do pedido → morador e catador recebem valores separados.
+6. **Admin**: Índice Canal Limpo filtrado por município e bairro.
 
 ### Variáveis de ambiente
 
-| Variável | Descrição |
+| Variável | Onde | Descrição |
+|---|---|---|
+| `JWT_SECRET` | back-end | Segredo para assinar os tokens |
+| `FRONTEND_URL` | back-end | Origem permitida no CORS (URL da Vercel em produção) |
+| `AI_API_KEY` | back-end | Chave da API de IA (opcional; sem ela usa o classificador de reserva) |
+| `AI_MODEL` | back-end | Modelo de IA usado na classificação |
+| `CATADOR_CENTAVOS_POR_KG` | back-end | Remuneração demo do catador por kg |
+| `VITE_API_URL` | front-end | URL da API (ex.: `https://<app>.onrender.com/api`) |
+
+---
+
+## 💸 Bolsa Reciclagem
+
+`valor = peso_kg × preço_por_kg`, calculado **no back-end** com o peso registrado no ponto.
+
+| Material | Preço por kg (fictício) |
 |---|---|
-| `DATABASE_URL` | String de conexão do PostgreSQL |
-| `AI_API_KEY` | Chave da API de IA de visão |
-| `JWT_SECRET` | Segredo para assinar os tokens |
-| `NEXT_PUBLIC_API_URL` | URL do backend |
+| Alumínio | R$ 5,00 |
+| Plástico PET/PEAD | R$ 1,50 |
+| Papel/papelão | R$ 0,50 |
+| Vidro | R$ 0,20 |
+
+- A **remuneração do catador é separada** e não reduz a recompensa do morador.
+- Todo crédito vem de uma **entrega validada** e fica registrado no **livro de transações**.
+- QR Codes são de **uso único** e expiram.
+
+**De onde viria o dinheiro:** governo e prefeituras, empresas patrocinadoras, programas de logística reversa e venda dos recicláveis pelas cooperativas. Empresas citadas no CONTEXT.md são **potenciais** parceiras, não parcerias confirmadas.
+
+---
+
+## 🤖 Onde a IA entra no produto
+
+| Funcionalidade | Como funciona |
+|---|---|
+| **Classificação por foto** | A foto vai para o back-end, que consulta uma API multimodal e devolve material, se é reciclável, nível de confiança e como preparar |
+| **Plano B** | Sem chave de API ou com a IA fora do ar, um classificador por palavras-chave responde a partir da descrição |
+| **Educação ambiental** | Orientações em linguagem simples, inclusive para itens que **não** são recicláveis (ex.: caixa de pizza engordurada) |
+
+**Cuidados:** a IA não confirma pagamento; a chave fica só no back-end; a imagem não é armazenada; resultados com baixa confiança mostram aviso.
+
+---
+
+## 📈 Índice Canal Limpo
+
+Indicadores por município, bairro e material: kg recuperados, entregas, pontos ativos, moradores e catadores ativos, créditos distribuídos e renda gerada para catadores.
+
+Como saber se funciona: comparar, mês a mês e bairro a bairro, o que chega pelo app com o que a coleta pública recolhe nas ruas e nos canais. **A redução de alagamentos é um impacto a ser medido ao longo do tempo, não algo que o app garante sozinho.**
 
 ---
 
 ## 🧪 Testes e CI
 
-Testes automatizados que rodam no **GitHub Actions** a cada push/PR:
-
-| # | Teste | O que valida |
-|---|---|---|
-| 1 | `test_calculo_cashback` | Valor total = Σ (peso × preço/kg) de cada material |
-| 2 | `test_divisao_coleta_domiciliar` | Divisão catador/morador (70/30) soma exatamente o total |
-| 3 | `test_validacao_qr_code` | QR inválido, expirado ou já usado não gera crédito |
-| 4 | `test_fluxo_status_pedido` | O pedido só avança na ordem aberto → aceito → coletado → entregue |
-| 5 | `test_cadastro_ponto_coleta` | Cadastro exige localização e pelo menos um material aceito |
-
 ```bash
-cd backend && pytest
-cd frontend && npm test
+cd backend && npm test                      # 30 testes
+cd frontend && npm test && npm run build    # 4 testes + build
 ```
+
+O GitHub Actions roda tudo a cada push e PR em `main`.
+
+| Área | O que é testado |
+|---|---|
+| Recompensa | valor = peso × preço, centavos sem erro de ponto flutuante, pesos inválidos |
+| QR Code | uso único, expiração, tipo errado, códigos únicos |
+| Pedidos | ordem aberto → aceito → coletado → entregue |
+| Transações | saldo pelo livro, idempotência, sem saldo negativo |
+| Classificação | reserva por texto, item não reciclável, normalização da resposta da IA |
+| API | cadastro/login, perfis (RBAC), aprovação de catador e ponto, entrega direta, coleta em casa com valores separados, indicadores por município/bairro |
+| Front-end | página inicial, rota protegida, acessibilidade do login, formatação em reais |
 
 ---
 
@@ -281,46 +230,44 @@ cd frontend && npm test
 
 | Onde usamos | Ferramenta | O que foi gerado | O que corrigimos / validamos |
 |---|---|---|---|
-| Ideação e escrita do README | `<ferramenta>` | Estrutura do documento e fluxos | Ajustamos os fluxos com o validador e revisamos os dados |
-| Backend | `<ferramenta>` | `<ex.: rotas de cadastro>` | `<ex.: faltava validação de perfil>` |
-| Frontend | `<ferramenta>` | `<ex.: tela do mapa>` | `<ex.: layout quebrava no celular>` |
-| Prompt de classificação | `<ferramenta>` | Prompt de visão | `<ex.: confundia vidro com plástico transparente; adicionamos exemplos>` |
+| Ideação, README e CONTEXT.md | Claude | Estrutura do documento, fluxos e modelo de dados | Ajustamos os fluxos com o validador, incluímos o ponto próprio do catador e separamos a remuneração do catador do cashback do morador |
+| Estrutura inicial do projeto | Claude | Esqueleto do back-end (Express, services, testes) e do front-end (páginas por perfil) | `<preencher: o que a equipe revisou/corrigiu>` |
+| Back-end | `<ferramenta>` | `<ex.: rotas de cadastro>` | `<ex.: faltava validação de perfil>` |
+| Front-end | `<ferramenta>` | `<ex.: tela do mapa>` | `<ex.: layout quebrava no celular>` |
+| Prompt de classificação | `<ferramenta>` | Prompt de visão | `<ex.: confundia vidro com plástico transparente>` |
 
 ---
 
-## 🗣️ Validação com o(a) validador(a)
+## 🗣️ Validação com o validador
 
-Perguntas que levamos para o(a) validador(a) do Movimento Pró-Criança:
+**Validador:** Caio B. Alves (Movimento Pró-Criança)
 
-- Na sua comunidade, as pessoas sabem onde fica um ponto de coleta?
-- Que recompensa motivaria de verdade? (dinheiro, crédito de celular, passagem, desconto no comércio)
-- Os catadores do bairro usariam um app para receber pedidos?
-- Faz mais sentido levar ao ponto ou pedir a coleta em casa?
+**O que ouvimos:** a grande quantidade de lixo descartado no meio ambiente traz consequências predatórias para o próprio ambiente, e falta local disponível para o descarte adequado do lixo. Com isso, o descarte inadequado contribui para os alagamentos.
 
-**O que aprendemos:** `<preencher após a conversa>`
+**Como isso mudou a solução:**
+- Além dos pontos de coleta, incluímos a **coleta em casa** pelos catadores, para quem não tem um ponto perto.
+- Permitimos que o **catador crie o próprio ponto de coleta**, aumentando os locais de descarte nos bairros.
 
 ---
 
 ## 🔭 Próximos passos
 
-- Integração com máquinas de coleta automática (reverse vending) nos pontos
-- Denúncia de lixo em canais com mapa de calor para Emlurb e Defesa Civil
-- Alerta de chuva: "chuva forte prevista, entregue seus recicláveis hoje"
-- Resgate de saldo por Pix e parcerias com o comércio local
-- Ranking de bairros e escolas
+Veja [docs/ROADMAP.md](./docs/ROADMAP.md): PostgreSQL, leitura de QR pela câmera, cooperativas e campanhas, painéis para prefeituras e empresas, resgate via Pix, mapa de descarte irregular e expansão para Olinda, Jaboatão, Paulista, Camaragibe, São Lourenço da Mata e Abreu e Lima.
 
 ---
 
 ## 👩‍💻 Equipe
 
-| Nome | Papel | GitHub |
-|---|---|---|
-| `<nome>` | Back-end | `@<usuario>` |
-| `<nome>` | Front-end | `@<usuario>` |
-| `Lucas Gabriel Santiago` | DevOps / Testes | `@<usuario>` |
-| `<nome>` | Dados / IA | `@<usuario>` |
-| `<nome>` | Validador(a) — Movimento Pró-Criança | — |
+**Equipe 2**
+
+| Nome | Papel |
+|---|---|
+| Ícalo Ricardo | Desenvolvedor |
+| Lucas Gabriel Santiago | DevOps / Testes |
+| Maria Lucília | Desenvolvedora |
+| Niedja Brasil | Desenvolvedora |
+| Caio B. Alves | Validador — Movimento Pró-Criança |
 
 ---
 
-<p align="center">Feito no Hackathon APONTI Academy · REC'n'Play 2026 · Recife-PE</p>
+<p align="center">Recicla PE · Hackathon APONTI Academy · REC'n'Play 2026 · Recife-PE</p>

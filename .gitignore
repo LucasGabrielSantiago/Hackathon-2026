@@ -1,0 +1,18 @@
+# Dependências
+node_modules/
+
+# Variáveis de ambiente (segurança: nunca commitar chaves)
+.env
+.env.local
+.env.production
+
+# Builds
+dist/
+build/
+coverage/
+
+# Sistema operacional / editores
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
