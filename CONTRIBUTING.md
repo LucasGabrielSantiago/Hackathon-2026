@@ -1,14 +1,17 @@
 # Como contribuir — Recicla PE
 
 1. **Leia o [CONTEXT.md](./CONTEXT.md)** antes de implementar qualquer coisa. As regras de negócio dele têm prioridade.
-2. Atualize sua cópia: `git pull` antes de começar.
-3. Crie uma branch por funcionalidade: `git checkout -b feat/nome-curto`.
+2. Seguimos **Gitflow** (detalhes em [docs/DEVOPS.md](./docs/DEVOPS.md)):
+   ```bash
+   git checkout develop && git pull
+   git checkout -b feat/nome-curto
+   ```
 4. Teste localmente antes de abrir PR:
    ```bash
    cd backend && npm test
    cd ../frontend && npm test && npm run build
    ```
-5. Abra um Pull Request para `main`. O CI precisa passar.
+5. Abra um Pull Request para **`develop`** (nunca direto em `main`). O CI e o DevSecOps precisam passar.
 
 ## Padrão de commits
 

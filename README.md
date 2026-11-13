@@ -17,7 +17,7 @@
 | **Bolsa Reciclagem** | O programa de incentivo financeiro (créditos por kg) |
 | **Índice Canal Limpo** | Os indicadores de impacto socioambiental |
 
-📘 O contexto completo do projeto (regras de negócio, perfis, modelo de dados) está no **[CONTEXT.md](./CONTEXT.md)**.
+📘 O contexto completo do projeto (regras de negócio, perfis, modelo de dados) está no **[CONTEXT.md](./CONTEXT.md)**. A especificação visual está em **[docs/FRONTEND_DESIGN.md](./docs/FRONTEND_DESIGN.md)**.
 
 ---
 
@@ -75,8 +75,10 @@ Planejados (Fase 2+): cooperativa, empresa parceira e gestor público.
 ```
 ├── CONTEXT.md              # contexto e regras do projeto (ler primeiro)
 ├── CONTRIBUTING.md         # como contribuir
-├── docs/                   # arquitetura, regras, modelo de dados, roadmap
-├── .github/workflows/      # CI (testes do back e do front + build)
+├── SECURITY.md             # política de segurança
+├── docker-compose.yml      # ambiente local com Docker
+├── docs/                   # arquitetura, regras, modelo de dados, roadmap, DevOps, design do front
+├── .github/                # CI, DevSecOps e Dependabot
 ├── backend/                # Node.js + Express (API REST)
 │   ├── src/
 │   │   ├── app.js          # monta a API (usado pelos testes)
@@ -105,13 +107,15 @@ Detalhes em [docs/ARQUITETURA.md](./docs/ARQUITETURA.md).
 | Banco | Em memória no MVP (com seeds de demonstração) → PostgreSQL na Fase 2 |
 | IA | API multimodal de visão (opcional) + classificador de reserva por texto |
 | Testes | node:test (back-end) · Vitest + React Testing Library (front-end) |
-| CI/CD | GitHub Actions · Vercel (front) · Render (back) |
+| DevOps | Docker (multi-stage, não-root), Docker Compose, GitHub Actions, Gitflow |
+| DevSecOps | Helmet, Gitleaks, npm audit, Hadolint, Trivy, CodeQL, Dependabot |
+| Deploy | Vercel (front) · Render (back) |
 
 ---
 
 ## 🚀 Como rodar localmente
 
-Pré-requisito: **Node.js 18+**.
+Pré-requisito: **Node.js 22.12+** (ou só o Docker Desktop, ver abaixo).
 
 ### 1. Back-end
 ```bash
@@ -128,6 +132,15 @@ npm install
 cp .env.example .env        # Windows PowerShell: copy .env.example .env
 npm run dev                 # http://localhost:5173
 ```
+
+### Com Docker
+
+```bash
+copy .env.example .env      # defina JWT_SECRET no .env
+docker compose up --build   # app: http://localhost:8080 · API: http://localhost:3001/api/health
+```
+
+Containers sem root, somente leitura e com healthcheck. Detalhes em [docs/DEVOPS.md](./docs/DEVOPS.md) e [SECURITY.md](./SECURITY.md).
 
 ### Contas de demonstração
 
@@ -206,11 +219,11 @@ Como saber se funciona: comparar, mês a mês e bairro a bairro, o que chega pel
 ## 🧪 Testes e CI
 
 ```bash
-cd backend && npm test                      # 30 testes
+cd backend && npm test                      # 31 testes
 cd frontend && npm test && npm run build    # 4 testes + build
 ```
 
-O GitHub Actions roda tudo a cada push e PR em `main`.
+O GitHub Actions roda os testes e o pipeline de DevSecOps (Gitleaks, `npm audit`, Hadolint, Trivy e CodeQL) a cada push e PR em `main` e `develop`.
 
 | Área | O que é testado |
 |---|---|
