@@ -32,3 +32,11 @@ describe('Login: mensagens e recuperação de senha', () => {
     expect(screen.getByRole('link', { name: 'Esqueci minha senha' })).toHaveAttribute('href', '/esqueci-senha');
   });
 });
+
+describe('Login: sem contas de demonstração na tela', () => {
+  it('não mostra e-mails nem a senha das contas demo', () => {
+    const { container } = render(<MemoryRouter><AuthProvider><Login /></AuthProvider></MemoryRouter>);
+    expect(container).not.toHaveTextContent('reciclape.demo');
+    expect(container).not.toHaveTextContent('demo1234');
+  });
+});

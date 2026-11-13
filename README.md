@@ -9,6 +9,8 @@
 🔗 **App (Vercel):** https://hackathon-2026-theta-eight.vercel.app
 🔗 **API (Render):** https://recicla-pe-api.onrender.com/api/health
 🚀 Como publicar: [docs/DEPLOY.md](./docs/DEPLOY.md)
+📖 **Guia ilustrado (PDF):** https://hackathon-2026-theta-eight.vercel.app/guia-recicla-pe.pdf · arquivo em [`frontend/public/guia-recicla-pe.pdf`](./frontend/public/guia-recicla-pe.pdf)
+🔑 **Contas de demonstração:** `morador@`, `catador@`, `ponto@` e `admin@reciclape.demo` · senha `demo1234`
 🎥 **Demo / Pitch:** `<inserir-link>`
 
 | Nome | O que é |
@@ -62,8 +64,8 @@ O catador também pode **cadastrar o próprio ponto de coleta**, recebendo doaç
 
 | Perfil | O que faz |
 |---|---|
-| **Morador** | Classifica resíduos, vê o mapa, pede coleta, gera QR Code de entrega, acompanha a carteira |
-| **Catador** | Vê pedidos próximos (após aprovação), aceita, confirma a coleta, cadastra ponto próprio, acompanha ganhos |
+| **Morador** | Classifica resíduos, vê o mapa, pede coleta em casa (foto + endereço pelo GPS ou CEP), vê quem aceitou e o trajeto do coletor, gera QR Code de entrega, acompanha a carteira |
+| **Coletor(a) de recicláveis** (perfil `catador`) | Vê pedidos do bairro com foto (após aprovação), aceita e já compartilha a posição, confirma a coleta, leva ao ponto, cadastra ponto próprio, acompanha ganhos |
 | **Ponto de coleta** | Registra a pesagem e confirma a entrega |
 | **Admin** | Aprova catadores e pontos, gerencia preços e vê o Índice Canal Limpo |
 
@@ -176,9 +178,9 @@ Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovad
 
 1. **Morador**: Classificar → "latinha de refrigerante" → Carteira → **Gerar QR Code** (copie o código).
 2. **Ponto**: Registrar pesagem → cole o código → Metal 2 kg → **Confirmar** → R$ 10,00 para o morador.
-3. **Morador**: Pedir coleta em casa → **foto dos materiais (obrigatória)** → quantidades → **CEP** (ex.: 51020-000) preenche a rua → número → confira o pino no mapa.
-4. **Coletor** (`catador@`): vê a foto antes de aceitar → Aceitar → em **Coletas**, "Simular trajeto (demo)" ou "Compartilhar minha localização" (ou "Navegar com o Google Maps").
-5. **Morador**: em "Pedir coleta" aparece "Coletor aceitou sua coleta" e o mapa com o percurso, distância e tempo estimado, atualizado a cada 5 s.
+3. **Morador**: Pedir coleta em casa → **foto dos materiais (obrigatória)** → quantidades → **Usar minha localização** (o GPS preenche rua, número, bairro e CEP) ou digite o **CEP** (ex.: 51020-000) → confira o pino no mapa.
+4. **Coletor** (`catador@`): vê a foto antes de aceitar → **Aceitar** → o app abre **Coletas** e já compartilha a localização (permita o GPS). Sem GPS no notebook, use "Simular trajeto (demo)"; "Navegar com o Google Maps" abre a rota.
+5. **Morador** (sem recarregar a página): em "Pedir coleta" aparece "Coletor aceitou sua coleta" e o mapa com o percurso, distância e tempo estimado, atualizado a cada 5 s.
 6. **Coletor**: digitar o código do QR que aparece na tela do morador → Confirmar coleta (o compartilhamento de localização para).
 7. **Ponto**: Receber → **Pedido de coleta** → número do pedido → o app mostra quem está trazendo → pesar → morador e coletor recebem valores separados.
    - **Se ninguém aceitou**, o próprio morador pode levar ao ponto: informa o número do pedido e mostra o **QR do pedido** (o ponto digita os dois). Nesse caso não há remuneração de coletor.
@@ -189,6 +191,7 @@ Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovad
 
 | Documento | Conteúdo |
 |---|---|
+| [Guia ilustrado (PDF)](./frontend/public/guia-recicla-pe.pdf) | Como funciona o app, perfil por perfil, com as telas · também em `/guia-recicla-pe.pdf` no app |
 | [CONTEXT.md](./CONTEXT.md) | Contexto, regras de negócio, perfis e modelo de dados |
 | [docs/ARQUITETURA.md](./docs/ARQUITETURA.md) | Arquitetura, decisões e rotas da API |
 | [docs/REGRAS_DE_NEGOCIO.md](./docs/REGRAS_DE_NEGOCIO.md) | Onde cada regra está implementada e testada |
@@ -216,9 +219,10 @@ Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovad
 
 ## 🗺️ Endereços, mapas e acompanhamento da coleta
 
+- **Endereço pelo GPS:** "Usar minha localização" preenche rua, número, bairro, cidade e CEP a partir da posição do celular (Nominatim reverso; se faltar o CEP, o ViaCEP completa pela rua). Mexer no pino com o endereço vazio também preenche os campos.
 - **Endereço por CEP** em todo o sistema (cadastro, pedido de coleta e ponto de coleta): o [ViaCEP](https://viacep.com.br) preenche rua, bairro e cidade; o número localiza o endereço no mapa ([Nominatim/OpenStreetMap](https://nominatim.org)); o pino pode ser ajustado com o dedo. Ninguém digita latitude e longitude.
-- **Coleta aceita:** o morador vê o nome de quem aceitou e o horário.
-- **Percurso:** o coletor compartilha a localização (ou usa "Simular trajeto" na demonstração) e o morador acompanha no mapa a rota ([OSRM](https://project-osrm.org)), a distância e o tempo estimado, atualizados a cada 5 s.
+- **Coleta aceita:** a tela do morador se atualiza sozinha (a cada 10 s enquanto espera) e mostra o nome de quem aceitou e o horário.
+- **Percurso:** ao aceitar, o coletor vai direto para a rota e **já compartilha a localização** (continua se trocar de aba; sinal fraco ou coletor parado não interrompem). Na demonstração há "Simular trajeto". O morador acompanha no mapa a rota ([OSRM](https://project-osrm.org)), a distância e o tempo estimado, atualizados a cada 5 s.
 - **Google Maps:** o botão "Navegar com o Google Maps" abre a rota no app do Google Maps pelos [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), sem chave de API.
 - **Privacidade:** antes do aceite o coletor vê só o bairro; a posição do coletor só aparece para o morador daquele pedido e para de ser enviada quando a coleta é confirmada.
 - **Limites do MVP:** Nominatim (1 consulta por segundo) e o servidor público do OSRM são para demonstração. Em produção: Google Maps Platform (Geocoding, Routes e Maps JavaScript, com chave restrita por domínio) ou servidores próprios.
@@ -265,8 +269,8 @@ Como saber se funciona: comparar, mês a mês e bairro a bairro, o que chega pel
 ## 🧪 Testes e CI
 
 ```bash
-cd backend && npm test                      # 33 testes
-cd frontend && npm test && npm run build    # 4 testes + build
+cd backend && npm test                      # 50 testes
+cd frontend && npm test && npm run build    # 23 testes + build
 ```
 
 O GitHub Actions roda os testes e o pipeline de DevSecOps (Gitleaks, `npm audit`, Hadolint, Trivy e CodeQL) a cada push e PR em `main` e `develop`.
