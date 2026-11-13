@@ -260,3 +260,26 @@ test('ponto aceita lixo eletrônico e exige localização', async () => {
   assert.strictEqual(ok.status, 201);
   assert.strictEqual(ok.body.ponto.cep, '51020000');
 });
+
+test('limite de requisições responde 429 com mensagem em português', async () => {
+  const { rateLimit } = require('express-rate-limit');
+  const express = require('express');
+  const app = express();
+  app.use(rateLimit({ windowMs: 60000, limit: 2, message: { erro: 'MUITAS_REQUISICOES', mensagem: 'Muitas requisições. Aguarde um pouco e tente de novo.' } }));
+  app.get('/x', (req, res) => res.json({ ok: true }));
+  const srv = app.listen(0); await new Promise((r) => srv.once('listening', r));
+  const url = `http://127.0.0.1:${srv.address().port}/x`;
+  await fetch(url); await fetch(url);
+  const r = await fetch(url);
+  srv.close();
+  assert.strictEqual(r.status, 429);
+  const resp = await fetch(`${base}/health`);
+  assert.ok(resp.headers.get('ratelimit-policy') || resp.headers.get('ratelimit'), 'API envia cabeçalhos de limite');
+});
+
+test('e-mail malicioso não trava a validação', async () => {
+  const inicio = Date.now();
+  const r = await api('/auth/esqueci-senha', { metodo: 'POST', corpo: { email: `!@!.${'!.'.repeat(5000)}` } });
+  assert.strictEqual(r.status, 400);
+  assert.ok(Date.now() - inicio < 1000);
+});

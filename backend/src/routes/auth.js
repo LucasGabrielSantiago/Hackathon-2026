@@ -9,7 +9,9 @@ const { ErroNegocio } = require('../services/erros');
 
 const router = express.Router();
 const PERFIS_CADASTRO = ['morador', 'catador', 'ponto']; // admin/gestor não se autocadastram
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Partes do domínio sem ponto: cada caractere só casa de um jeito (sem backtracking lento).
+const EMAIL_RE = /^[^\s@]{1,64}@[^\s@.]{1,63}(?:\.[^\s@.]{1,63}){1,4}$/;
+const emailValido = (email) => typeof email === 'string' && email.length <= 254 && EMAIL_RE.test(email);
 
 function publico(u) {
   const { senha_hash, ...resto } = u;
@@ -19,7 +21,7 @@ function publico(u) {
 router.post('/cadastro', (req, res) => {
   const { nome, email, telefone = '', senha, perfil = 'morador', bairro_id, endereco = '' } = req.body || {};
   if (!nome || String(nome).trim().length < 2) throw new ErroNegocio('NOME_INVALIDO', 'Informe seu nome.');
-  if (!EMAIL_RE.test(email || '')) throw new ErroNegocio('EMAIL_INVALIDO', 'E-mail inválido.');
+  if (!emailValido(email)) throw new ErroNegocio('EMAIL_INVALIDO', 'E-mail inválido.');
   if (!senha || String(senha).length < 8) throw new ErroNegocio('SENHA_FRACA', 'A senha precisa ter ao menos 8 caracteres.');
   if (!PERFIS_CADASTRO.includes(perfil)) throw new ErroNegocio('PERFIL_INVALIDO', 'Perfil inválido.');
 
@@ -63,7 +65,7 @@ const hashToken = (t) => crypto.createHash('sha256').update(t).digest('hex');
 
 router.post('/esqueci-senha', limitarLogin, (req, res) => {
   const email = String(req.body?.email || '').toLowerCase().trim();
-  if (!EMAIL_RE.test(email)) throw new ErroNegocio('EMAIL_INVALIDO', 'E-mail inválido.');
+  if (!emailValido(email)) throw new ErroNegocio('EMAIL_INVALIDO', 'E-mail inválido.');
   const db = getDb();
   const usuario = db.usuarios.find((u) => u.email === email);
   const resposta = { mensagem: MSG_RECUPERACAO };

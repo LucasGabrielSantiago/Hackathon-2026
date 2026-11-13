@@ -5,6 +5,7 @@ const config = require('../config');
 const { getDb, inserir } = require('../db');
 const { autenticar } = require('../middlewares/auth');
 const { exigirPerfil } = require('../middlewares/rbac');
+const { limitePedidos } = require('../middlewares/limiteRequisicoes');
 const { ErroNegocio } = require('../services/erros');
 const { transicionar } = require('../services/pedidoStatus');
 const qr = require('../services/qrcode');
@@ -48,7 +49,7 @@ function buscarPedido(db, id) {
   return pedido;
 }
 
-router.post('/', autenticar, exigirPerfil('morador'), upload.single('foto'), (req, res) => {
+router.post('/', limitePedidos, autenticar, exigirPerfil('morador'), upload.single('foto'), (req, res) => {
   const db = getDb();
   const { endereco, bairro_id, janela_horario, cep = '', latitude, longitude } = req.body || {};
   const destino = coordenada(latitude, longitude);
@@ -103,7 +104,7 @@ router.get('/minhas-coletas', autenticar, exigirPerfil('catador'), (req, res) =>
 });
 
 // Foto do pedido: o morador dono, o admin e coletores aprovados que atendem o bairro (ou que aceitaram o pedido).
-router.get('/:id/foto', autenticar, (req, res) => {
+router.get('/:id/foto', limitePedidos, autenticar, (req, res) => {
   const db = getDb();
   const pedido = buscarPedido(db, req.params.id);
   const foto = db.fotosPedidos[pedido.id];
@@ -157,7 +158,7 @@ router.post('/:id/coletar', autenticar, exigirPerfil('catador'), (req, res) => {
 });
 
 // Coletor que aceitou envia a própria posição enquanto vai até o morador.
-router.post('/:id/localizacao', autenticar, exigirPerfil('catador'), (req, res) => {
+router.post('/:id/localizacao', limitePedidos, autenticar, exigirPerfil('catador'), (req, res) => {
   const pedido = buscarPedido(getDb(), req.params.id);
   if (pedido.catador_usuario_id !== req.usuario.id) throw new ErroNegocio('SEM_PERMISSAO', 'Pedido não está com você.', 403);
   if (pedido.status !== 'aceito') throw new ErroNegocio('PEDIDO_FORA_DE_ROTA', 'A localização só é compartilhada a caminho da coleta.', 409);
@@ -168,7 +169,7 @@ router.post('/:id/localizacao', autenticar, exigirPerfil('catador'), (req, res) 
 });
 
 // Acompanhamento: morador dono, coletor do pedido ou admin.
-router.get('/:id/acompanhamento', autenticar, (req, res) => {
+router.get('/:id/acompanhamento', limitePedidos, autenticar, (req, res) => {
   const db = getDb();
   const pedido = buscarPedido(db, req.params.id);
   const { id, perfil } = req.usuario;
