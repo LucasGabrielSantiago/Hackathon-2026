@@ -1,7 +1,8 @@
 # Como contribuir — Recicla PE
 
 1. **Leia o [CONTEXT.md](./CONTEXT.md)** antes de implementar qualquer coisa. As regras de negócio dele têm prioridade.
-2. Seguimos **Gitflow** (detalhes em [docs/DEVOPS.md](./docs/DEVOPS.md)):
+2. Configure o ambiente seguindo o **[docs/DESENVOLVIMENTO.md](./docs/DESENVOLVIMENTO.md)** (clone, `.env`, rodar com ou sem Docker).
+3. Seguimos **Gitflow** (detalhes em [docs/DEVOPS.md](./docs/DEVOPS.md)):
    ```bash
    git checkout develop && git pull
    git checkout -b feat/nome-curto
