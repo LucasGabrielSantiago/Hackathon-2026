@@ -32,6 +32,14 @@ export default function SolicitarColeta() {
 
   const carregar = () => api('/pedidos/meus').then((d) => setPedidos(d.pedidos.slice().reverse())).catch(() => {});
   useEffect(() => { api('/locais/bairros').then((d) => setBairros(d.bairros)).catch(() => {}); carregar(); }, []);
+  // Enquanto há pedido esperando coletor, confere a cada 10 s: quando alguém aceita,
+  // o card mostra na hora quem vai buscar e o mapa com o percurso.
+  const esperando = pedidos.some((p) => ['aberto', 'aceito'].includes(p.status));
+  useEffect(() => {
+    if (!esperando) return undefined;
+    const t = setInterval(carregar, 10000);
+    return () => clearInterval(t);
+  }, [esperando]);
 
   async function escolherFoto(e) {
     const f = e.target.files?.[0];

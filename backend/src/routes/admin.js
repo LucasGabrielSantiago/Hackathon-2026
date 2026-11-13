@@ -16,7 +16,7 @@ router.post('/resetar-demo', autenticar, exigirPerfil('admin'), async (req, res,
 });
 
 router.get('/status', autenticar, exigirPerfil('admin'), (req, res) => {
-  res.json({ persistencia: persistencia.ativa() ? 'postgres' : 'memoria' });
+  res.json({ persistencia: persistencia.modo() });
 });
 
 module.exports = router;

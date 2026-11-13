@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
 import Badge from '../../components/common/Badge.jsx';
@@ -15,6 +15,7 @@ export default function PedidosProximos() {
   const [erro, setErro] = useState('');
   const [pendente, setPendente] = useState(false);
   const [msg, setMsg] = useState('');
+  const navigate = useNavigate();
 
   const carregar = () => api('/pedidos/proximos').then((d) => setProximos(d.pedidos)).catch((e) => {
     // Cadastro novo ainda não aprovado: não é erro, é uma etapa.
@@ -25,7 +26,7 @@ export default function PedidosProximos() {
 
   async function aceitar(id) {
     setErro(''); setMsg('');
-    try { await api(`/pedidos/${id}/aceitar`, { metodo: 'POST' }); setMsg('O endereço aparece em Minhas coletas.'); carregar(); } catch (e) { setErro(e.message); }
+    try { await api(`/pedidos/${id}/aceitar`, { metodo: 'POST' }); navigate(`/catador/coletas?compartilhar=${id}`); } catch (e) { setErro(e.message); }
   }
 
   return (
