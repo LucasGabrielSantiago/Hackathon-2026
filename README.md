@@ -180,7 +180,8 @@ Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovad
 4. **Coletor** (`catador@`): vê a foto antes de aceitar → Aceitar → em **Coletas**, "Simular trajeto (demo)" ou "Compartilhar minha localização" (ou "Navegar com o Google Maps").
 5. **Morador**: em "Pedir coleta" aparece "Coletor aceitou sua coleta" e o mapa com o percurso, distância e tempo estimado, atualizado a cada 5 s.
 6. **Coletor**: digitar o código do QR que aparece na tela do morador → Confirmar coleta (o compartilhamento de localização para).
-7. **Ponto**: Registrar pesagem → Coleta do coletor → número do pedido → morador e coletor recebem valores separados.
+7. **Ponto**: Receber → **Pedido de coleta** → número do pedido → o app mostra quem está trazendo → pesar → morador e coletor recebem valores separados.
+   - **Se ninguém aceitou**, o próprio morador pode levar ao ponto: informa o número do pedido e mostra o **QR do pedido** (o ponto digita os dois). Nesse caso não há remuneração de coletor.
 8. **Esqueci minha senha** (local): no login → informe o e-mail → "Abrir link de demonstração" → nova senha. Em produção o link não aparece na tela (envio por e-mail fica para a Fase 2).
 9. **Admin**: Aprovações (coletora Rita e ponto do Severino) e Índice Canal Limpo filtrado por município e bairro.
 

@@ -1,4 +1,7 @@
 // Testes de integração: sobem a API numa porta aleatória e usam fetch (Node 18+).
+// Muitos pedidos em poucos segundos: limites altos só nos testes.
+process.env.LIMITE_GERAL_POR_MIN = '100000';
+process.env.LIMITE_PEDIDOS_POR_MIN = '100000';
 const test = require('node:test');
 const assert = require('node:assert');
 const { criarApp } = require('../src/app');
@@ -38,7 +41,10 @@ async function criarPedido(token, { comFoto = true, bairro_id = 1, materiais = [
   return { status: resp.status, body: await resp.json() };
 }
 
-const login = async (email) => (await api('/auth/login', { metodo: 'POST', corpo: { email, senha: 'demo1234' } })).body.token;
+const { _reset: zerarLimiteLogin } = require('../src/middlewares/limiteLogin');
+// O limite de login (10 por 15 min) é testado à parte; aqui cada login começa do zero.
+const login = async (email) => { zerarLimiteLogin(); return loginBruto(email); };
+const loginBruto = async (email) => (await api('/auth/login', { metodo: 'POST', corpo: { email, senha: 'demo1234' } })).body.token;
 
 test('cadastro e login de morador', async () => {
   const cad = await api('/auth/cadastro', { metodo: 'POST', corpo: { nome: 'Ana', email: 'ana@teste.com', senha: '12345678', perfil: 'morador', bairro_id: 1 } });
@@ -295,4 +301,50 @@ test('admin restaura os dados de demonstração; outros perfis não', async () =
   assert.ok(getDb().pedidos.length < antes);
   assert.strictEqual(getDb().pedidos.length, 6);
   assert.strictEqual((await api('/admin/status', { token: admin })).body.persistencia, 'memoria');
+});
+
+test('morador leva ao ponto: número do pedido + QR do pedido, sem remuneração de coletor', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const ponto = await login('ponto@reciclape.demo');
+  const ped = await criarPedido(morador, { materiais: [{ material: 'plastico', quantidade_kg: 2 }] });
+  const id = ped.body.pedido.id;
+  const saldoAntes = (await api('/carteira', { token: morador })).body.saldo_centavos;
+
+  const resumo = await api(`/pedidos/${id}/resumo`, { token: ponto });
+  assert.strictEqual(resumo.body.quem_traz, 'morador');
+  assert.strictEqual(resumo.body.endereco, undefined, 'ponto não vê o endereço');
+  assert.strictEqual((await api(`/pedidos/${id}/resumo`, { token: morador })).status, 403);
+
+  const semQr = await api('/entregas', { metodo: 'POST', token: ponto, corpo: { pedido_id: id, itens: [{ material: 'plastico', peso_kg: 2 }] } });
+  assert.strictEqual(semQr.body.erro, 'QR_OBRIGATORIO');
+  const outroPedido = await criarPedido(morador);
+  const qrErrado = await api('/entregas', { metodo: 'POST', token: ponto, corpo: { pedido_id: id, codigo: outroPedido.body.pedido.qr_code, itens: [{ material: 'plastico', peso_kg: 2 }] } });
+  assert.strictEqual(qrErrado.body.erro, 'QR_INVALIDO');
+
+  const ok = await api('/entregas', { metodo: 'POST', token: ponto, corpo: { pedido_id: id, codigo: ped.body.pedido.qr_code, itens: [{ material: 'plastico', peso_kg: 2 }] } });
+  assert.strictEqual(ok.status, 201);
+  assert.strictEqual(ok.body.entrega.entregue_por, 'morador');
+  assert.strictEqual(ok.body.entrega.remuneracao_catador_centavos, undefined);
+  assert.strictEqual((await api('/carteira', { token: morador })).body.saldo_centavos, saldoAntes + 300);
+  assert.strictEqual(getDb().pedidos.find((p) => p.id === id).status, 'entregue');
+
+  const deNovo = await api('/entregas', { metodo: 'POST', token: ponto, corpo: { pedido_id: id, codigo: ped.body.pedido.qr_code, itens: [{ material: 'plastico', peso_kg: 2 }] } });
+  assert.strictEqual(deNovo.status, 409, 'não entrega duas vezes');
+});
+
+test('pedido aceito: ponto só recebe depois que o coletor confirmar a coleta', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const coletor = await login('catador@reciclape.demo');
+  const ponto = await login('ponto@reciclape.demo');
+  const ped = await criarPedido(morador);
+  const id = ped.body.pedido.id;
+  await api(`/pedidos/${id}/aceitar`, { metodo: 'POST', token: coletor });
+  const r = await api('/entregas', { metodo: 'POST', token: ponto, corpo: { pedido_id: id, codigo: ped.body.pedido.qr_code, itens: [{ material: 'metal', peso_kg: 1 }] } });
+  assert.strictEqual(r.body.erro, 'COLETOR_A_CAMINHO');
+  await api(`/pedidos/${id}/coletar`, { metodo: 'POST', token: coletor, corpo: { codigo: ped.body.pedido.qr_code } });
+  assert.strictEqual((await api(`/pedidos/${id}/resumo`, { token: ponto })).body.quem_traz, 'coletor');
+  const ok = await api('/entregas', { metodo: 'POST', token: ponto, corpo: { pedido_id: id, itens: [{ material: 'metal', peso_kg: 1 }] } });
+  assert.strictEqual(ok.status, 201);
+  assert.strictEqual(ok.body.entrega.entregue_por, 'coletor');
+  assert.strictEqual(ok.body.entrega.remuneracao_catador_centavos, 80);
 });

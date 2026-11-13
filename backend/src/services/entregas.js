@@ -2,7 +2,7 @@
 const config = require('../config');
 const { ErroNegocio } = require('./erros');
 const { calcularEntrega, calcularRemuneracaoCatador } = require('./recompensa');
-const { transicionar, podeTransicionar } = require('./pedidoStatus');
+const { transicionar, entregarPeloMorador } = require('./pedidoStatus');
 const qr = require('./qrcode');
 const transacoes = require('./transacoes');
 
@@ -13,7 +13,8 @@ function proximoId(lista) {
 /**
  * Registra uma entrega pesada no ponto.
  * - Direta: { codigo } = QR de entrega do morador.
- * - Coleta em casa: { pedidoId } = pedido com status "coletado".
+ * - Coleta em casa trazida pelo coletor: { pedidoId } = pedido "coletado".
+ * - Coleta em casa trazida pelo próprio morador: { pedidoId, codigo } = pedido "aberto" + QR do pedido.
  */
 function registrarEntrega(db, { pontoId, operadorId, itens, codigo, pedidoId, chaveIdempotencia, agora = new Date() }) {
   if (chaveIdempotencia) {
@@ -28,13 +29,25 @@ function registrarEntrega(db, { pontoId, operadorId, itens, codigo, pedidoId, ch
   const naoAceitos = calculo.itens.filter((i) => !ponto.materiais_aceitos.includes(i.material));
   if (naoAceitos.length) throw new ErroNegocio('MATERIAL_NAO_ACEITO', `Este ponto não aceita: ${naoAceitos.map((i) => i.material).join(', ')}`);
 
-  let moradorUsuarioId; let catadorUsuarioId = null; let pedido = null;
+  let moradorUsuarioId; let catadorUsuarioId = null; let pedido = null; let entreguePor = 'morador';
   if (pedidoId) {
     pedido = db.pedidos.find((p) => p.id === pedidoId);
     if (!pedido) throw new ErroNegocio('NAO_ENCONTRADO', 'Pedido não encontrado.', 404);
-    if (!podeTransicionar(pedido.status, 'entregue')) throw new ErroNegocio('STATUS_INVALIDO', 'O pedido precisa estar com status "coletado".', 409);
     moradorUsuarioId = pedido.morador_usuario_id;
-    catadorUsuarioId = pedido.catador_usuario_id;
+    if (pedido.status === 'coletado') {
+      // O coletor buscou na casa e trouxe: basta o número do pedido.
+      catadorUsuarioId = pedido.catador_usuario_id;
+      entreguePor = 'coletor';
+    } else if (pedido.status === 'aberto') {
+      // Ninguém aceitou e o próprio morador trouxe: confere o QR do pedido (só ele tem).
+      if (!codigo) throw new ErroNegocio('QR_OBRIGATORIO', 'Quando o próprio morador traz o material, leia também o QR Code do pedido.');
+      const registro = qr.validar(db.qrcodes, codigo, { tipo: 'pedido', agora });
+      if (registro.referencia_id !== pedido.id) throw new ErroNegocio('QR_INVALIDO', 'Este QR Code não é deste pedido.');
+    } else if (pedido.status === 'aceito') {
+      throw new ErroNegocio('COLETOR_A_CAMINHO', 'Um coletor aceitou este pedido. Ele precisa confirmar a coleta (ou desistir) antes da entrega.', 409);
+    } else {
+      throw new ErroNegocio('STATUS_INVALIDO', `Este pedido já está ${pedido.status === 'entregue' ? 'entregue' : 'cancelado'}.`, 409);
+    }
   } else {
     const registro = qr.consumir(db.qrcodes, codigo, { tipo: 'entrega', agora });
     moradorUsuarioId = registro.usuario_id;
@@ -46,6 +59,7 @@ function registrarEntrega(db, { pontoId, operadorId, itens, codigo, pedidoId, ch
     catador_usuario_id: catadorUsuarioId,
     ponto_id: ponto.id,
     pedido_id: pedido?.id ?? null,
+    entregue_por: entreguePor,
     operador_id: operadorId,
     peso_total_gramas: calculo.peso_total_gramas,
     recompensa_centavos: calculo.total_centavos,
@@ -74,6 +88,9 @@ function registrarEntrega(db, { pontoId, operadorId, itens, codigo, pedidoId, ch
       });
     }
     transicionar(pedido, 'entregue');
+  } else if (pedido) {
+    qr.consumir(db.qrcodes, codigo, { tipo: 'pedido', agora });
+    entregarPeloMorador(pedido);
   }
 
   return { entrega, itens: calculo.itens, duplicada: false };

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
@@ -100,6 +101,11 @@ export default function SolicitarColeta() {
               <p className="rp-card-texto">
                 {p.status === 'aceito' ? 'O coletor está a caminho. Mostre este código na coleta.' : 'Guarde este código: o coletor vai pedir na hora da coleta.'}
               </p>
+              {p.status === 'aberto' && (
+                <p className="rp-card-texto">
+                  <b>Prefere levar você mesmo?</b> Leve a um <Link to="/morador/mapa">ponto de coleta</Link>, informe o <b>pedido #{p.id}</b> e mostre este QR Code.
+                </p>
+              )}
               <span className="rp-qr-codigo">{p.qr_code}</span>
             </div>
           )}
@@ -127,7 +133,7 @@ export default function SolicitarColeta() {
           ))}
           <span className="rp-ajuda">Lixo eletrônico: celulares, cabos, carregadores, pilhas e aparelhos pequenos.</span>
         </fieldset>
-        <CampoEndereco valor={endereco} onChange={setEndereco} bairros={bairros} id="coleta" />
+        <CampoEndereco valor={endereco} onChange={(e) => { setEndereco(e); setErro(''); }} bairros={bairros} id="coleta" />
         <span className="rp-ajuda">Só o coletor que aceitar o pedido vê o endereço e o pino exato.</span>
         <fieldset className="rp-campo-grupo" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className="rp-rotulo">Horário</legend>

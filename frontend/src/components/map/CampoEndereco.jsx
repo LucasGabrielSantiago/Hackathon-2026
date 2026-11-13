@@ -32,7 +32,11 @@ export default function CampoEndereco({ valor, onChange, bairros = [], comMapa =
   async function localizar(base = valor) {
     if (!base.logradouro && somenteDigitos(base.cep).length !== 8) { setAviso('Informe o CEP ou a rua.'); return; }
     setBuscando(true);
-    try { onChange({ ...base, ...(await geocodificar(base)) }); setAviso(''); } catch (err) { setAviso(err.message); } finally { setBuscando(false); }
+    try {
+      const { aproximado, ...pos } = await geocodificar(base);
+      onChange({ ...base, ...pos });
+      setAviso(aproximado ? 'Localização aproximada: arraste o pino até a porta da casa.' : '');
+    } catch (err) { setAviso(err.message); } finally { setBuscando(false); }
   }
 
   function minhaLocalizacao() {
@@ -84,7 +88,7 @@ export default function CampoEndereco({ valor, onChange, bairros = [], comMapa =
             <button className="rp-btn rp-btn-fantasma" type="button" onClick={minhaLocalizacao} style={{ flex: 1 }}>Usar minha localização</button>
           </div>
           <Suspense fallback={<p className="apoio">Carregando mapa…</p>}>
-            <SeletorLocal valor={valor.latitude != null ? { latitude: valor.latitude, longitude: valor.longitude } : null} onChange={(pos) => mudar(pos)} />
+            <SeletorLocal valor={valor.latitude != null ? { latitude: valor.latitude, longitude: valor.longitude } : null} onChange={(pos) => { mudar(pos); setAviso(''); }} />
           </Suspense>
           <span className="rp-ajuda">{valor.latitude != null ? 'Confira o pino. Se estiver no lugar errado, arraste ou toque no ponto certo.' : 'Preencha o CEP e o número para marcar no mapa.'}</span>
         </>

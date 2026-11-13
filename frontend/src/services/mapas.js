@@ -18,16 +18,33 @@ export async function buscarCep(cep) {
   return { cep: formatarCep(limpo), logradouro: dados.logradouro || '', bairro: dados.bairro || '', cidade: dados.localidade || '', uf: dados.uf || '' };
 }
 
-export async function geocodificar({ logradouro, numero, cidade, uf, cep }) {
-  const params = new URLSearchParams({ format: 'jsonv2', limit: '1', countrycodes: 'br', 'accept-language': 'pt-BR' });
-  if (logradouro) params.set('street', `${numero ? `${numero} ` : ''}${logradouro}`);
-  if (cidade) params.set('city', cidade);
-  if (uf) params.set('state', uf);
-  if (!logradouro && cep) params.set('postalcode', formatarCep(cep));
-  let lista;
-  try { lista = await (await fetch(`https://nominatim.openstreetmap.org/search?${params}`)).json(); } catch { throw new Error('Não foi possível localizar o endereço agora. Marque o local no mapa.'); }
-  if (!lista?.length) throw new Error('Endereço não encontrado no mapa. Marque o local arrastando o pino.');
-  return { latitude: Number(lista[0].lat), longitude: Number(lista[0].lon) };
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function nominatim(params) {
+  const base = new URLSearchParams({ format: 'jsonv2', limit: '1', countrycodes: 'br', 'accept-language': 'pt-BR' });
+  Object.entries(params).forEach(([k, v]) => v && base.set(k, v));
+  const lista = await (await fetch(`https://nominatim.openstreetmap.org/search?${base}`)).json();
+  return lista?.[0] ? { latitude: Number(lista[0].lat), longitude: Number(lista[0].lon) } : null;
+}
+
+// Tenta do mais preciso ao mais genérico. Muitas casas não têm número no OpenStreetMap,
+// então a rua sem número, o CEP ou o bairro dão um ponto aproximado para ajustar no mapa.
+// Respeita o limite do Nominatim (1 consulta por segundo).
+export async function geocodificar({ logradouro, numero, bairro, cidade, uf, cep }, { intervaloMs = 1100 } = {}) {
+  const tentativas = [
+    logradouro && numero && { street: `${numero} ${logradouro}`, city: cidade, state: uf },
+    logradouro && { street: logradouro, city: cidade, state: uf },
+    somenteDigitos(cep).length === 8 && { postalcode: formatarCep(cep), country: 'Brasil' },
+    bairro && cidade && { q: `${bairro}, ${cidade}${uf ? `, ${uf}` : ''}` },
+  ].filter(Boolean);
+  if (tentativas.length === 0) throw new Error('Informe o CEP ou a rua.');
+  for (let i = 0; i < tentativas.length; i += 1) {
+    if (i > 0) await esperar(intervaloMs);
+    let achou;
+    try { achou = await nominatim(tentativas[i]); } catch { throw new Error('Não foi possível localizar o endereço agora. Marque o local no mapa.'); }
+    if (achou) return { ...achou, aproximado: i > 0 };
+  }
+  throw new Error('Endereço não encontrado no mapa. Toque no mapa para marcar o local.');
 }
 
 export async function calcularRota(origem, destino) {
