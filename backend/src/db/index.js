@@ -70,4 +70,11 @@ function inserir(colecao, registro) {
   return novo;
 }
 
-module.exports = { getDb, reset, inserir, proximoId };
+// Troca todo o conteúdo (usado ao carregar do banco). Coleções novas do código ganham o padrão.
+function substituir(dados) {
+  const padrao = reset({ comSeed: false });
+  db = { ...padrao, ...dados };
+  return db;
+}
+
+module.exports = { getDb, reset, inserir, proximoId, substituir };

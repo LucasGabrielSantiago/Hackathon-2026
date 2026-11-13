@@ -91,3 +91,17 @@ Pull Requests para `develop` geram **Preview Deployments** na Vercel (URL tempor
 | Dados sumiram | API reiniciou (dados em memória) | Esperado no MVP; PostgreSQL resolve na Fase 2 |
 | 404 ao recarregar uma página | Falta de rewrite para SPA | Já resolvido no `vercel.json` |
 | Build falha por versão do Node | Node < 22.12 | Em Vercel → Settings → Node.js Version: 22.x |
+
+
+## Persistência (Neon)
+
+O MVP guarda os dados em memória e salva uma cópia de tudo numa linha JSONB do PostgreSQL a cada alteração (`backend/src/db/persistencia.js`). Ao iniciar, a API carrega essa cópia. Se o banco estiver fora do ar, a API sobe só em memória.
+
+1. Crie um projeto gratuito em [neon.tech](https://neon.tech) (região **AWS US East / N. Virginia**, a mesma do Render).
+2. Em **Connect**, copie a connection string (`postgresql://...sslmode=require`).
+3. No Render → `recicla-pe-api` → **Environment** → **Add Environment Variable**: `DATABASE_URL` = a connection string. Salve (o Render faz o redeploy).
+4. Nos logs do Render deve aparecer `[persistencia] banco vazio: dados de demonstração gravados` (primeira vez) ou `[persistencia] dados carregados do banco`.
+
+> 🔒 A connection string tem usuário e senha: é **segredo**. Nunca no Git, em issue, PR ou chat. Se vazar, gere outra senha no Neon (Roles → Reset password) e atualize no Render.
+
+Limites conhecidos: uma única instância da API (o plano gratuito do Render) e 1 GB no Neon gratuito. As fotos são reduzidas no celular antes do envio. Próximo passo: tabelas relacionais com migrations (ver `docs/MODELO_DE_DADOS.md`).

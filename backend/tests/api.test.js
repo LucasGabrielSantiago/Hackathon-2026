@@ -283,3 +283,16 @@ test('e-mail malicioso não trava a validação', async () => {
   assert.strictEqual(r.status, 400);
   assert.ok(Date.now() - inicio < 1000);
 });
+
+test('admin restaura os dados de demonstração; outros perfis não', async () => {
+  const morador = await login('morador@reciclape.demo');
+  await criarPedido(morador);
+  const antes = getDb().pedidos.length;
+  assert.strictEqual((await api('/admin/resetar-demo', { metodo: 'POST', token: morador })).status, 403);
+  const admin = await login('admin@reciclape.demo');
+  const r = await api('/admin/resetar-demo', { metodo: 'POST', token: admin });
+  assert.strictEqual(r.status, 200);
+  assert.ok(getDb().pedidos.length < antes);
+  assert.strictEqual(getDb().pedidos.length, 6);
+  assert.strictEqual((await api('/admin/status', { token: admin })).body.persistencia, 'memoria');
+});
