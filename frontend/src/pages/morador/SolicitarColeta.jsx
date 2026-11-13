@@ -47,7 +47,9 @@ export default function SolicitarColeta() {
       canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
       bmp.close();
       setTemPrevia(true);
-      setFoto(f);
+      // Envia a versão reduzida (até 720 px, JPEG): mais rápido no 4G e ocupa menos no banco.
+      const reduzida = await new Promise((r) => canvas.toBlob(r, 'image/jpeg', 0.8));
+      setFoto(reduzida ? new File([reduzida], 'foto.jpg', { type: 'image/jpeg' }) : f);
     } catch {
       setErro('Não foi possível ler essa imagem. Envie uma foto em JPG, PNG ou WEBP.');
     }

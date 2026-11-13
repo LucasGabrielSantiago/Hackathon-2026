@@ -12,6 +12,7 @@ Não abra issue pública. Envie um e-mail para a equipe (`<inserir e-mail da equ
 - Cabeçalhos de segurança: Helmet na API e CSP/X-Frame-Options no Nginx (Docker) e na Vercel (`vercel.json`)
 - CORS restrito às origens de `FRONTEND_URL`
 - API não inicia em produção sem `JWT_SECRET` (no Render ele é gerado automaticamente)
+- `DATABASE_URL` (PostgreSQL/Neon) é segredo: só no painel do Render; conexão com SSL e certificado verificado
 - Valores financeiros calculados só no back-end, com idempotência e livro de transações
 - Imagens enviadas para a IA não são armazenadas; endereço do morador oculto até o catador aceitar (LGPD)
 

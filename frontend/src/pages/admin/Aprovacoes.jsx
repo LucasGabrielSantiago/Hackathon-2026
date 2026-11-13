@@ -9,6 +9,7 @@ export default function Aprovacoes() {
   const [catadores, setCatadores] = useState([]);
   const [pontos, setPontos] = useState([]);
   const [erro, setErro] = useState('');
+  const [aviso, setAviso] = useState('');
 
   async function carregar() {
     try {
@@ -23,9 +24,16 @@ export default function Aprovacoes() {
     try { await api(caminho, { metodo: 'PATCH' }); carregar(); } catch (e) { setErro(e.message); }
   }
 
+  async function restaurarDemo() {
+    if (!window.confirm('Apagar tudo o que foi criado e voltar aos dados de demonstração?')) return;
+    setErro('');
+    try { setAviso((await api('/admin/resetar-demo', { metodo: 'POST' })).mensagem); carregar(); } catch (e) { setErro(e.message); }
+  }
+
   return (
     <>
       <h1 className="titulo-1">Aprovações</h1>
+      {aviso && <Alert tipo="sucesso" titulo="Pronto">{aviso}</Alert>}
       {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
       <h2 className="secao">Coletores pendentes <Badge tipo="aviso">{catadores.length}</Badge></h2>
       {catadores.length === 0 ? <EmptyState titulo="Tudo em dia" texto="Nenhum coletor aguardando aprovação." /> : (
@@ -49,6 +57,11 @@ export default function Aprovacoes() {
           </div>
         ))}</div>
       )}
+      <div className="rp-card">
+        <p className="rp-card-titulo">Dados de demonstração</p>
+        <p className="rp-card-texto">Apaga cadastros, pedidos e entregas criados e volta aos dados iniciais. Use antes de uma apresentação.</p>
+        <button className="rp-btn rp-btn-fantasma" type="button" onClick={restaurarDemo}>Restaurar dados de demonstração</button>
+      </div>
     </>
   );
 }

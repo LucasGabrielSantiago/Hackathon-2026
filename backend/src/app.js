@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const { limiteGeral } = require('./middlewares/limiteRequisicoes');
+const { salvarAposAlteracao } = require('./db/persistencia');
 const config = require('./config');
 const { tratarErros } = require('./middlewares/erros');
 
@@ -20,6 +21,7 @@ function criarApp() {
   }));
   app.use(express.json({ limit: '100kb' }));
   app.use('/api', limiteGeral);
+  app.use('/api', salvarAposAlteracao);
 
   app.get('/', (req, res) => res.json({
     app: 'Recicla PE API',
@@ -37,6 +39,7 @@ function criarApp() {
   app.use('/api/carteira', require('./routes/carteira'));
   app.use('/api/classificar', require('./routes/classificar'));
   app.use('/api/indicadores', require('./routes/indicadores'));
+  app.use('/api/admin', require('./routes/admin'));
 
   app.use((req, res) => res.status(404).json({ erro: 'NAO_ENCONTRADO', mensagem: 'Rota não encontrada.' }));
   app.use(tratarErros);
