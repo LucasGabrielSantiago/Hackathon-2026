@@ -27,3 +27,23 @@ test('carregar dados antigos completa coleções novas do código', () => {
   assert.deepStrictEqual(getDb().fotosPedidos, {});
   reset();
 });
+
+test('sem banco, no desenvolvimento, contas criadas sobrevivem ao reinício (arquivo local)', async () => {
+  const os = require('os');
+  const path = require('path');
+  const fs = require('fs');
+  const { inserir } = require('../src/db');
+  const caminho = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'recicla-')), 'dados.json');
+  reset();
+  assert.strictEqual(await persistencia.iniciar('', { arquivo: caminho }), true);
+  assert.strictEqual(persistencia.modo(), 'arquivo');
+  inserir('usuarios', { nome: 'Conta Nova', email: 'nova@teste.com', perfil: 'morador', senha_hash: 'x' });
+  await persistencia.encerrar();
+  reset(); // simula o reinício da API
+  assert.ok(!getDb().usuarios.some((u) => u.email === 'nova@teste.com'));
+  await persistencia.iniciar('', { arquivo: caminho });
+  assert.ok(getDb().usuarios.some((u) => u.email === 'nova@teste.com'));
+  assert.ok(Buffer.isBuffer(getDb().fotosPedidos[1].dados));
+  await persistencia.encerrar();
+  reset();
+});

@@ -6,6 +6,7 @@ const { getDb, inserir } = require('../db');
 const { gerarToken, autenticar } = require('../middlewares/auth');
 const { limitarLogin } = require('../middlewares/limiteLogin');
 const { ErroNegocio } = require('../services/erros');
+const persistencia = require('../db/persistencia');
 
 const router = express.Router();
 const PERFIS_CADASTRO = ['morador', 'catador', 'ponto']; // admin/gestor não se autocadastram
@@ -19,7 +20,9 @@ function publico(u) {
 }
 
 router.post('/cadastro', (req, res) => {
-  const { nome, email, telefone = '', senha, perfil = 'morador', bairro_id, endereco = '' } = req.body || {};
+  const { nome, telefone = '', senha, perfil = 'morador', bairro_id, endereco = '' } = req.body || {};
+  // Teclado do celular costuma deixar espaço no fim do e-mail: não é motivo para recusar.
+  const email = typeof req.body?.email === 'string' ? req.body.email.trim() : req.body?.email;
   if (!nome || String(nome).trim().length < 2) throw new ErroNegocio('NOME_INVALIDO', 'Informe seu nome.');
   if (!emailValido(email)) throw new ErroNegocio('EMAIL_INVALIDO', 'E-mail inválido.');
   if (!senha || String(senha).length < 8) throw new ErroNegocio('SENHA_FRACA', 'A senha precisa ter ao menos 8 caracteres.');
@@ -43,6 +46,7 @@ router.post('/cadastro', (req, res) => {
     inserir('catadores', { usuario_id: usuario.id, cooperativa_id: null, raio_atuacao_km, bairros, materiais, disponivel: true, aprovado: false });
   }
 
+  persistencia.gravar(); // conta nova é gravada na hora, sem esperar o agrupamento
   res.status(201).json({ usuario: publico(usuario), token: gerarToken(usuario) });
 });
 

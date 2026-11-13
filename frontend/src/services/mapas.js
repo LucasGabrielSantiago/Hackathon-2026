@@ -27,6 +27,32 @@ async function nominatim(params) {
   return lista?.[0] ? { latitude: Number(lista[0].lat), longitude: Number(lista[0].lon) } : null;
 }
 
+// Coordenadas (GPS ou pino) -> endereço. O CEP vem do OpenStreetMap ou, se faltar,
+// da busca do ViaCEP por UF/cidade/rua.
+export async function enderecoPorCoordenadas({ latitude, longitude }) {
+  const q = new URLSearchParams({ format: 'jsonv2', lat: String(latitude), lon: String(longitude), addressdetails: '1', zoom: '18', 'accept-language': 'pt-BR' });
+  let dados;
+  try { dados = await (await fetch(`https://nominatim.openstreetmap.org/reverse?${q}`)).json(); } catch { throw new Error('Não foi possível descobrir o endereço agora. Preencha os campos.'); }
+  const a = dados?.address;
+  if (!a) throw new Error('Endereço não encontrado para este ponto. Preencha os campos.');
+  const uf = (a['ISO3166-2-lvl4'] || '').replace(/^BR-/, '');
+  const end = {
+    logradouro: a.road || a.pedestrian || a.footway || a.residential || '',
+    numero: a.house_number || '',
+    bairro: a.suburb || a.neighbourhood || a.quarter || a.city_district || '',
+    cidade: a.city || a.town || a.village || a.municipality || '',
+    uf,
+    cep: somenteDigitos(a.postcode).length === 8 ? formatarCep(a.postcode) : '',
+  };
+  if (!end.cep && end.logradouro && end.cidade && uf) {
+    try {
+      const lista = await (await fetch(`https://viacep.com.br/ws/${uf}/${encodeURIComponent(end.cidade)}/${encodeURIComponent(end.logradouro)}/json/`)).json();
+      if (Array.isArray(lista) && lista[0]?.cep) end.cep = formatarCep(lista[0].cep);
+    } catch { /* sem CEP: a pessoa completa */ }
+  }
+  return end;
+}
+
 // Tenta do mais preciso ao mais genérico. Muitas casas não têm número no OpenStreetMap,
 // então a rua sem número, o CEP ou o bairro dão um ponto aproximado para ajustar no mapa.
 // Respeita o limite do Nominatim (1 consulta por segundo).
