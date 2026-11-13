@@ -178,7 +178,7 @@ Senha de todas as contas: `demo1234`
 | Perfil | E-mail |
 |---|---|
 | Morador | morador@reciclape.demo |
-| Catador | catador@reciclape.demo |
+| Coletor(a) de recicláveis | catador@reciclape.demo |
 | Ponto de coleta | ponto@reciclape.demo |
 | Admin | admin@reciclape.demo |
 

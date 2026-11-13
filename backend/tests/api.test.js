@@ -23,6 +23,21 @@ async function api(caminho, { metodo = 'GET', corpo, token, headers = {} } = {})
   });
   return { status: resp.status, body: await resp.json() };
 }
+// PNG 1x1 válido, usado como foto dos materiais nos testes.
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+
+async function criarPedido(token, { comFoto = true, bairro_id = 1, materiais = [{ material: 'metal', quantidade_kg: 1 }], destino = null } = {}) {
+  const fd = new FormData();
+  if (destino) { fd.append('latitude', String(destino[0])); fd.append('longitude', String(destino[1])); fd.append('cep', '51020-000'); }
+  fd.append('materiais_estimados', JSON.stringify(materiais));
+  fd.append('endereco', 'Rua Y, 10');
+  fd.append('bairro_id', String(bairro_id));
+  fd.append('janela_horario', 'manhã');
+  if (comFoto) fd.append('foto', new Blob([PNG], { type: 'image/png' }), 'foto.png');
+  const resp = await fetch(`${base}/pedidos`, { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: fd });
+  return { status: resp.status, body: await resp.json() };
+}
+
 const login = async (email) => (await api('/auth/login', { metodo: 'POST', corpo: { email, senha: 'demo1234' } })).body.token;
 
 test('cadastro e login de morador', async () => {
@@ -104,7 +119,8 @@ test('coleta em casa: catador e morador recebem valores separados', async () => 
   const ponto = await login('ponto@reciclape.demo');
   const saldoAntes = (await api('/carteira', { token: morador })).body.saldo_centavos;
 
-  const ped = await api('/pedidos', { metodo: 'POST', token: morador, corpo: { materiais_estimados: [{ material: 'metal', quantidade_kg: 1 }], endereco: 'Rua Y, 10', bairro_id: 1, janela_horario: 'manhã' } });
+  const ped = await criarPedido(morador);
+  assert.strictEqual(ped.status, 201);
   const id = ped.body.pedido.id;
   const proximos = await api('/pedidos/proximos', { token: catador });
   assert.strictEqual(proximos.body.pedidos.find((p) => p.id === id).endereco, undefined, 'endereço oculto antes de aceitar');
@@ -142,4 +158,128 @@ test('API envia cabeçalhos de segurança e esconde o framework', async () => {
 test('CORS: sem FRONTEND_URL configurado (desenvolvimento) aceita a origem', async () => {
   const resp = await fetch(`${base}/health`, { headers: { Origin: 'http://localhost:5173' } });
   assert.strictEqual(resp.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+});
+
+test('login com e-mail inexistente ou senha errada dá a mesma mensagem', async () => {
+  const semConta = await api('/auth/login', { metodo: 'POST', corpo: { email: 'ninguem@teste.com', senha: 'qualquer1' } });
+  const senhaErrada = await api('/auth/login', { metodo: 'POST', corpo: { email: 'morador@reciclape.demo', senha: 'errada123' } });
+  assert.strictEqual(semConta.status, 401);
+  assert.strictEqual(semConta.body.mensagem, 'E-mail ou senha inválidos.');
+  assert.strictEqual(senhaErrada.body.mensagem, semConta.body.mensagem);
+});
+
+test('esqueci minha senha: link de uso único troca a senha', async () => {
+  const inexistente = await api('/auth/esqueci-senha', { metodo: 'POST', corpo: { email: 'ninguem@teste.com' } });
+  const existente = await api('/auth/esqueci-senha', { metodo: 'POST', corpo: { email: 'maria@reciclape.demo' } });
+  assert.strictEqual(inexistente.status, 200);
+  assert.strictEqual(inexistente.body.mensagem, existente.body.mensagem, 'não revela se o e-mail existe');
+  assert.strictEqual(inexistente.body.link_demo, undefined);
+  const token = new URLSearchParams(existente.body.link_demo.split('?')[1]).get('token');
+  assert.ok(!getDb().recuperacoesSenha.some((r) => r.token_hash === token), 'guarda só o hash');
+  const curta = await api('/auth/redefinir-senha', { metodo: 'POST', corpo: { token, senha: '123' } });
+  assert.strictEqual(curta.status, 400);
+  const ok = await api('/auth/redefinir-senha', { metodo: 'POST', corpo: { token, senha: 'novaSenha123' } });
+  assert.strictEqual(ok.status, 200);
+  const deNovo = await api('/auth/redefinir-senha', { metodo: 'POST', corpo: { token, senha: 'outraSenha123' } });
+  assert.strictEqual(deNovo.status, 400, 'link é de uso único');
+  assert.strictEqual((await api('/auth/login', { metodo: 'POST', corpo: { email: 'maria@reciclape.demo', senha: 'novaSenha123' } })).status, 200);
+});
+
+test('pedido de coleta exige foto dos materiais', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const sem = await criarPedido(morador, { comFoto: false });
+  assert.strictEqual(sem.status, 400);
+  assert.strictEqual(sem.body.erro, 'FOTO_OBRIGATORIA');
+  const eletronico = await criarPedido(morador, { materiais: [{ material: 'eletronico', quantidade_kg: 2 }] });
+  assert.strictEqual(eletronico.status, 201, 'lixo eletrônico é aceito');
+  const invalido = await criarPedido(morador, { materiais: [{ material: 'radioativo', quantidade_kg: 1 }] });
+  assert.strictEqual(invalido.status, 400);
+});
+
+test('foto do pedido: só morador dono, admin e coletor que atende o bairro', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const ped = await criarPedido(morador, { bairro_id: 1 });
+  const id = ped.body.pedido.id;
+  const foto = async (email) => (await fetch(`${base}/pedidos/${id}/foto`, { headers: { authorization: `Bearer ${await login(email)}` } }));
+  const doMorador = await foto('morador@reciclape.demo');
+  assert.strictEqual(doMorador.status, 200);
+  assert.strictEqual(doMorador.headers.get('content-type'), 'image/png');
+  assert.strictEqual((await foto('catador@reciclape.demo')).status, 200, 'coletor de Boa Viagem vê');
+  assert.strictEqual((await foto('josefa@reciclape.demo')).status, 403, 'coletora de outro bairro não vê');
+  assert.strictEqual((await foto('rita@reciclape.demo')).status, 403, 'coletora pendente não vê');
+  assert.strictEqual((await foto('joao@reciclape.demo')).status, 403, 'outro morador não vê');
+  assert.strictEqual((await foto('admin@reciclape.demo')).status, 200);
+});
+
+test('dados de demonstração: pedidos aguardando retirada com foto e sem endereço exposto', async () => {
+  const catador = await login('catador@reciclape.demo');
+  const r = await api('/pedidos/proximos', { token: catador });
+  const demo = r.body.pedidos.filter((p) => p.demo);
+  assert.ok(demo.length >= 3, 'coletor de Boa Viagem e São José vê pedidos de demonstração');
+  assert.ok(demo.every((p) => p.tem_foto && p.endereco === undefined && p.qr_code === undefined));
+  const materiais = (await api('/materiais')).body.materiais.map((m) => m.nome);
+  assert.ok(materiais.includes('eletronico') && materiais.includes('outros'));
+});
+
+test('acompanhamento: morador vê quem aceitou e a posição do coletor só a caminho', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const coletor = await login('catador@reciclape.demo');
+  const outro = await login('severino@reciclape.demo');
+  const ped = await criarPedido(morador, { bairro_id: 1, destino: [-8.1196, -34.9012] });
+  const id = ped.body.pedido.id;
+  assert.strictEqual(ped.body.pedido.cep, '51020000');
+
+  const antes = (await api('/pedidos/proximos', { token: coletor })).body.pedidos.find((p) => p.id === id);
+  assert.strictEqual(antes.latitude, undefined, 'coordenada exata escondida antes do aceite');
+
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: coletor, corpo: { latitude: -8.1, longitude: -34.9 } })).status, 403, 'só depois de aceitar');
+  await api(`/pedidos/${id}/aceitar`, { metodo: 'POST', token: coletor });
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: outro, corpo: { latitude: -8.1, longitude: -34.9 } })).status, 403, 'outro coletor não envia');
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: coletor, corpo: { latitude: 200, longitude: 0 } })).status, 400);
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: coletor, corpo: { latitude: -8.1, longitude: -34.9 } })).status, 200);
+
+  const acomp = await api(`/pedidos/${id}/acompanhamento`, { token: morador });
+  assert.strictEqual(acomp.status, 200);
+  assert.strictEqual(acomp.body.status, 'aceito');
+  assert.strictEqual(acomp.body.coletor_nome, 'Coletor');
+  assert.deepStrictEqual(acomp.body.destino, { latitude: -8.1196, longitude: -34.9012 });
+  assert.strictEqual(acomp.body.coletor_posicao.latitude, -8.1);
+  assert.strictEqual((await api(`/pedidos/${id}/acompanhamento`, { token: await login('joao@reciclape.demo') })).status, 403, 'outro morador não acompanha');
+  const meus = (await api('/pedidos/meus', { token: morador })).body.pedidos.find((p) => p.id === id);
+  assert.strictEqual(meus.coletor_nome, 'Coletor');
+
+  await api(`/pedidos/${id}/coletar`, { metodo: 'POST', token: coletor, corpo: { codigo: ped.body.pedido.qr_code } });
+  assert.strictEqual((await api(`/pedidos/${id}/acompanhamento`, { token: morador })).body.coletor_posicao, null, 'para de compartilhar após a coleta');
+});
+
+test('ponto aceita lixo eletrônico e exige localização', async () => {
+  const coletor = await login('catador@reciclape.demo');
+  const base = { nome: 'Ecoponto Teste', endereco: 'Rua A, 1', bairro_id: 1, materiais_aceitos: ['eletronico'], modalidade: 'doacao' };
+  assert.strictEqual((await api('/pontos', { metodo: 'POST', token: coletor, corpo: base })).body.erro, 'LOCALIZACAO_INVALIDA');
+  const ok = await api('/pontos', { metodo: 'POST', token: coletor, corpo: { ...base, latitude: -8.12, longitude: -34.9, cep: '51020-000' } });
+  assert.strictEqual(ok.status, 201);
+  assert.strictEqual(ok.body.ponto.cep, '51020000');
+});
+
+test('limite de requisições responde 429 com mensagem em português', async () => {
+  const { rateLimit } = require('express-rate-limit');
+  const express = require('express');
+  const app = express();
+  app.use(rateLimit({ windowMs: 60000, limit: 2, message: { erro: 'MUITAS_REQUISICOES', mensagem: 'Muitas requisições. Aguarde um pouco e tente de novo.' } }));
+  app.get('/x', (req, res) => res.json({ ok: true }));
+  const srv = app.listen(0); await new Promise((r) => srv.once('listening', r));
+  const url = `http://127.0.0.1:${srv.address().port}/x`;
+  await fetch(url); await fetch(url);
+  const r = await fetch(url);
+  srv.close();
+  assert.strictEqual(r.status, 429);
+  const resp = await fetch(`${base}/health`);
+  assert.ok(resp.headers.get('ratelimit-policy') || resp.headers.get('ratelimit'), 'API envia cabeçalhos de limite');
+});
+
+test('e-mail malicioso não trava a validação', async () => {
+  const inicio = Date.now();
+  const r = await api('/auth/esqueci-senha', { metodo: 'POST', corpo: { email: `!@!.${'!.'.repeat(5000)}` } });
+  assert.strictEqual(r.status, 400);
+  assert.ok(Date.now() - inicio < 1000);
 });

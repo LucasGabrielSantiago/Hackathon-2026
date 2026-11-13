@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
+const { limiteGeral } = require('./middlewares/limiteRequisicoes');
 const config = require('./config');
 const { tratarErros } = require('./middlewares/erros');
 
@@ -18,6 +19,7 @@ function criarApp() {
     },
   }));
   app.use(express.json({ limit: '100kb' }));
+  app.use('/api', limiteGeral);
 
   app.get('/', (req, res) => res.json({
     app: 'Recicla PE API',

@@ -27,8 +27,8 @@ export default function Aprovacoes() {
     <>
       <h1 className="titulo-1">Aprovações</h1>
       {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
-      <h2 className="secao">Catadores pendentes <Badge tipo="aviso">{catadores.length}</Badge></h2>
-      {catadores.length === 0 ? <EmptyState titulo="Tudo em dia" texto="Nenhum catador aguardando aprovação." /> : (
+      <h2 className="secao">Coletores pendentes <Badge tipo="aviso">{catadores.length}</Badge></h2>
+      {catadores.length === 0 ? <EmptyState titulo="Tudo em dia" texto="Nenhum coletor aguardando aprovação." /> : (
         <div className="grade-responsiva">{catadores.map((c) => (
           <div key={c.id} className="rp-card">
             <p className="rp-card-titulo">{c.nome}</p>

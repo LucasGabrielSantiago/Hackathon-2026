@@ -33,8 +33,11 @@ export default function Login() {
       </div>
       {erro && <Alert tipo="erro" titulo="Não foi possível entrar">{erro}</Alert>}
       <button className="rp-btn rp-btn-primario rp-btn-bloco" type="submit" disabled={enviando}>{enviando ? 'Entrando…' : 'Entrar'}</button>
+      <p className="apoio centro"><Link to="/esqueci-senha">Esqueci minha senha</Link></p>
       <p className="apoio centro">Não tem conta? <Link to="/cadastro">Cadastre-se</Link></p>
-      <Alert tipo="aviso" titulo="Contas de demonstração">morador@, catador@, ponto@ ou admin@reciclape.demo · senha demo1234</Alert>
+      <Alert tipo="aviso" titulo="Contas de demonstração (senha demo1234)">
+        Morador: morador@reciclape.demo · Coletor: catador@reciclape.demo · Ponto: ponto@reciclape.demo · Admin: admin@reciclape.demo
+      </Alert>
     </form>
   );
 }

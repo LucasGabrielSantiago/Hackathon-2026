@@ -4,8 +4,8 @@ export default function Badge({ tipo = 'neutro', children }) {
 }
 
 const STATUS_PEDIDO = {
-  aberto: ['aviso', 'Aguardando catador'],
-  aceito: ['info', 'Catador a caminho'],
+  aberto: ['aviso', 'Aguardando coletor'],
+  aceito: ['info', 'Coletor a caminho'],
   coletado: ['neutro', 'Coletado'],
   entregue: ['sucesso', 'Entregue no ponto'],
   cancelado: ['erro', 'Cancelado'],

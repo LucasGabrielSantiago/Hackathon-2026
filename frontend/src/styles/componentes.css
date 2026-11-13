@@ -150,3 +150,5 @@
 .rp-barra-trilho { height: 12px; border-radius: 12px; background: var(--cinza-50); overflow: hidden; }
 .rp-barra-trilho div { height: 100%; border-radius: 12px; background: var(--azul-500); }
 .rp-barra-valor { text-align: right; font-weight: 600; color: var(--cinza-900); }
+.rp-material-eletronico { background: var(--amarelo-50); color: var(--vermelho-700); }
+.rp-material-outros { background: var(--cinza-50); color: var(--cinza-600); }

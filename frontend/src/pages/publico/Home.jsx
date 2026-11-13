@@ -39,7 +39,7 @@ export default function Home() {
       )}
 
       <div className="rp-card">
-        <p className="rp-card-titulo">É catador ou tem um ponto de coleta?</p>
+        <p className="rp-card-titulo">É coletor(a) de recicláveis ou tem um ponto de coleta?</p>
         <p className="rp-card-texto">Receba pedidos perto de você, abra seu próprio ponto e tenha remuneração própria por quilo.</p>
         <Link className="rp-btn rp-btn-secundario" to="/cadastro">Quero participar</Link>
       </div>
@@ -52,6 +52,7 @@ export default function Home() {
         <b>Recicla PE</b>
         <span>Reciclar gera renda. Cuidar transforma cidades.</span>
         <span>Lixo no lugar certo não vai parar no canal.</span>
+        <span><Link to="/termos" style={{ color: 'inherit' }}>Termos de uso</Link> · <Link to="/privacidade" style={{ color: 'inherit' }}>Política de privacidade</Link></span>
       </footer>
     </>
   );

@@ -7,6 +7,7 @@ export const NAVEGACAO = {
     { to: '/morador/coleta', icone: 'truck', rotulo: 'Coleta' },
     { to: '/morador/carteira', icone: 'wallet', rotulo: 'Carteira' },
   ],
+  // "catador" é o nome interno do perfil; na tela ele aparece como coletor(a) de recicláveis.
   catador: [
     { to: '/catador', icone: 'list', rotulo: 'Pedidos' },
     { to: '/catador/coletas', icone: 'box', rotulo: 'Coletas' },
