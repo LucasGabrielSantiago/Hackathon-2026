@@ -1,0 +1,38 @@
+/* Gerado a partir do Recicla PE Design System (tokens.json). Não edite valores soltos: altere o token. */
+:root{
+  --verde-500: #168548;
+  --verde-700: #116437;
+  --verde-50: #E7F5EC;
+  --azul-500: #168AAD;
+  --azul-700: #0F6A86;
+  --azul-50: #E7F4FA;
+  --branco: #FFFFFF;
+  --cinza-50: #F4F6F5;
+  --cinza-200: #DDE4E0;
+  --cinza-500: #7A8A82;
+  --cinza-600: #4A5A52;
+  --cinza-900: #27332D;
+  --vermelho-500: #DC4545;
+  --vermelho-700: #B42318;
+  --vermelho-50: #FDECEC;
+  --amarelo-500: #F2B544;
+  --amarelo-50: #FDF3DD;
+  --amarelo-800: #7A4E00;
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-6: 24px;
+  --espaco-8: 32px;
+  --raio-sm: 8px;
+  --raio-md: 12px;
+  --raio-lg: 16px;
+  --raio-pill: 999px;
+  --sombra-card: 0 1px 3px rgba(17,100,55,0.08);
+  --sombra-elevada: 0 4px 16px rgba(17,100,55,0.12);
+  --toque-min: 48px;
+  --barra-inferior: 64px;
+  --largura-max: 720px;
+  --font-display: Poppins, "Segoe UI", Arial, sans-serif;
+  --font-texto: Inter, "Segoe UI", system-ui, Arial, sans-serif;
+}

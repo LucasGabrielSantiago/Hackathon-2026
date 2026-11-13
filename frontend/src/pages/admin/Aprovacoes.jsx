@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api.js';
+import Alert from '../../components/common/Alert.jsx';
+import Badge from '../../components/common/Badge.jsx';
+import EmptyState from '../../components/common/EmptyState.jsx';
 import { NOMES_MATERIAIS } from '../../utils/formatar.js';
 
 export default function Aprovacoes() {
@@ -16,34 +19,36 @@ export default function Aprovacoes() {
   useEffect(() => { carregar(); }, []);
 
   async function aprovar(caminho) {
+    setErro('');
     try { await api(caminho, { metodo: 'PATCH' }); carregar(); } catch (e) { setErro(e.message); }
   }
 
   return (
-    <section>
-      <h1>Aprovações</h1>
-      {erro && <p className="erro" role="alert">{erro}</p>}
-      <h2>Catadores pendentes ({catadores.length})</h2>
-      <ul className="lista">
-        {catadores.map((c) => (
-          <li key={c.id} className="cartao">
-            <strong>{c.nome}</strong>
-            <span>{c.email} · {c.materiais.map((m) => NOMES_MATERIAIS[m]).join(', ') || 'sem materiais informados'}</span>
-            <button className="botao" type="button" onClick={() => aprovar(`/catadores/${c.id}/aprovar`)}>Aprovar</button>
-          </li>
-        ))}
-      </ul>
-      <h2>Pontos pendentes ({pontos.length})</h2>
-      <ul className="lista">
-        {pontos.map((p) => (
-          <li key={p.id} className="cartao">
-            <strong>{p.nome}</strong>
-            <span>{p.endereco} · {p.modalidade === 'compra' ? 'compra' : 'doação'}</span>
-            <span>{p.materiais_aceitos.map((m) => NOMES_MATERIAIS[m]).join(', ')}</span>
-            <button className="botao" type="button" onClick={() => aprovar(`/pontos/${p.id}/aprovar`)}>Aprovar</button>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <>
+      <h1 className="titulo-1">Aprovações</h1>
+      {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
+      <h2 className="secao">Catadores pendentes <Badge tipo="aviso">{catadores.length}</Badge></h2>
+      {catadores.length === 0 ? <EmptyState titulo="Tudo em dia" texto="Nenhum catador aguardando aprovação." /> : (
+        <div className="grade-responsiva">{catadores.map((c) => (
+          <div key={c.id} className="rp-card">
+            <p className="rp-card-titulo">{c.nome}</p>
+            <p className="rp-card-texto">{c.email}</p>
+            <p className="rp-card-texto">{c.materiais.map((m) => NOMES_MATERIAIS[m]).join(', ') || 'Sem materiais informados'}</p>
+            <button className="rp-btn rp-btn-primario" type="button" onClick={() => aprovar(`/catadores/${c.id}/aprovar`)}>Aprovar</button>
+          </div>
+        ))}</div>
+      )}
+      <h2 className="secao">Pontos pendentes <Badge tipo="aviso">{pontos.length}</Badge></h2>
+      {pontos.length === 0 ? <EmptyState titulo="Tudo em dia" texto="Nenhum ponto aguardando aprovação." /> : (
+        <div className="grade-responsiva">{pontos.map((p) => (
+          <div key={p.id} className="rp-card">
+            <div className="entre"><p className="rp-card-titulo">{p.nome}</p><Badge tipo="info">{p.modalidade === 'compra' ? 'Compra' : 'Doação'}</Badge></div>
+            <p className="rp-card-texto">{p.endereco}</p>
+            <p className="rp-card-texto">{p.materiais_aceitos.map((m) => NOMES_MATERIAIS[m]).join(', ')}</p>
+            <button className="rp-btn rp-btn-primario" type="button" onClick={() => aprovar(`/pontos/${p.id}/aprovar`)}>Aprovar</button>
+          </div>
+        ))}</div>
+      )}
+    </>
   );
 }

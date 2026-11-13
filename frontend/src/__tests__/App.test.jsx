@@ -24,3 +24,10 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Entrar' })).toBeInTheDocument();
   });
 });
+
+describe('Navegação mobile', () => {
+  it('não mostra a barra inferior para visitantes', () => {
+    renderizar();
+    expect(screen.queryByRole('navigation', { name: /principal/i })).not.toBeInTheDocument();
+  });
+});

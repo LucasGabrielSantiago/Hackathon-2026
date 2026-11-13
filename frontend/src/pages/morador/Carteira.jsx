@@ -1,18 +1,21 @@
 import { useEffect, useState } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import { api } from '../../services/api.js';
-import AvisoDemo from '../../components/AvisoDemo.jsx';
-import { reais } from '../../utils/formatar.js';
-
-const ORIGENS = { bolsa_reciclagem: 'Bolsa Reciclagem', remuneracao_catador: 'Remuneração de coleta', resgate: 'Resgate' };
+import Alert from '../../components/common/Alert.jsx';
+import EmptyState from '../../components/common/EmptyState.jsx';
+import WalletBalance from '../../components/wallet/WalletBalance.jsx';
+import TransactionList from '../../components/wallet/TransactionList.jsx';
+import QRCodeDisplay from '../../components/qr/QRCodeDisplay.jsx';
 
 export default function Carteira() {
   const [carteira, setCarteira] = useState(null);
+  const [kg, setKg] = useState(0);
   const [qr, setQr] = useState(null);
   const [erro, setErro] = useState('');
 
-  const carregar = () => api('/carteira').then(setCarteira).catch((e) => setErro(e.message));
-  useEffect(() => { carregar(); }, []);
+  useEffect(() => {
+    api('/carteira').then(setCarteira).catch((e) => setErro(e.message));
+    api('/entregas/minhas').then((d) => setKg(d.entregas.reduce((s, e) => s + e.peso_total_gramas, 0) / 1000)).catch(() => {});
+  }, []);
 
   async function gerarQr() {
     setErro('');
@@ -20,35 +23,21 @@ export default function Carteira() {
   }
 
   return (
-    <section>
-      <h1>Carteira</h1>
-      <div className="cartao destaque"><span>Saldo Bolsa Reciclagem</span><strong>{carteira ? reais(carteira.saldo_centavos) : '…'}</strong></div>
-      <AvisoDemo>{carteira?.aviso || 'Créditos demonstrativos.'}</AvisoDemo>
-
-      <div className="cartao">
-        <h2>Entregar no ponto</h2>
-        <p>Gere o código e mostre ao operador do ponto na hora da pesagem.</p>
-        <button className="botao" type="button" onClick={gerarQr}>Gerar QR Code</button>
-        {qr && (
-          <div className="qr">
-            <QRCodeSVG value={qr.codigo} size={180} />
-            <code>{qr.codigo}</code>
-            <small>Válido até {new Date(qr.expira_em).toLocaleTimeString('pt-BR')}</small>
-          </div>
-        )}
-        {erro && <p className="erro" role="alert">{erro}</p>}
-      </div>
-
-      <h2>Extrato</h2>
-      {carteira?.extrato.length === 0 && <p>Nenhuma movimentação ainda.</p>}
-      <ul className="lista">
-        {carteira?.extrato.map((t) => (
-          <li key={t.id} className="cartao linha">
-            <span>{ORIGENS[t.origem] || t.origem}<br /><small>{new Date(t.criado_em).toLocaleString('pt-BR')}</small></span>
-            <strong className={t.tipo === 'credito' ? 'ok' : 'erro'}>{t.tipo === 'credito' ? '+' : '−'} {reais(t.valor_centavos)}</strong>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <>
+      <h1 className="titulo-1">Carteira</h1>
+      <WalletBalance centavos={carteira?.saldo_centavos} kg={kg} extra={<span>Resgate em breve</span>} />
+      <Alert tipo="aviso" titulo="Valores demonstrativos">{carteira?.aviso || 'Os créditos ainda não podem ser resgatados.'}</Alert>
+      {qr ? <QRCodeDisplay codigo={qr.codigo} validade={qr.expira_em} /> : (
+        <div className="rp-card">
+          <p className="rp-card-titulo">Entregar num ponto de coleta</p>
+          <p className="rp-card-texto">Gere o código e mostre ao operador na hora da pesagem.</p>
+          <button className="rp-btn rp-btn-primario" type="button" onClick={gerarQr}>Gerar QR Code</button>
+        </div>
+      )}
+      {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
+      <h2 className="secao">Extrato</h2>
+      {carteira && carteira.extrato.length === 0 && <EmptyState titulo="Sua carteira está vazia" texto="Entregue seus recicláveis num ponto de coleta para ganhar os primeiros créditos." />}
+      {carteira && carteira.extrato.length > 0 && <TransactionList transacoes={carteira.extrato} />}
+    </>
   );
 }
