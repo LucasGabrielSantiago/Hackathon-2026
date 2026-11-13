@@ -1,0 +1,90 @@
+# Deploy — Recicla PE
+
+| Parte | Onde | Branch | Configuração |
+|---|---|---|---|
+| API (back-end) | **Render** (plano free) | `main` | [`render.yaml`](../render.yaml) |
+| App (front-end) | **Vercel** (Hobby) | `main` | [`frontend/vercel.json`](../frontend/vercel.json) |
+
+A ordem importa: **primeiro a API** (para ter a URL), **depois o front**, e por fim liberar o CORS.
+
+---
+
+## 1. API no Render
+
+1. Acesse https://render.com e entre com o GitHub.
+2. **New → Blueprint** → escolha o repositório `Hackathon-2026` → **Apply**.
+   O Render lê o `render.yaml` e cria o serviço `recicla-pe-api` (Node 22, pasta `backend`, health check em `/api/health`).
+   O `JWT_SECRET` é gerado automaticamente.
+3. Quando o deploy terminar, copie a URL, por exemplo `https://recicla-pe-api.onrender.com`.
+4. Teste: `https://recicla-pe-api.onrender.com/api/health` → `{"status":"ok","app":"Recicla PE"}`.
+
+> Plano free: o serviço **dorme depois de ~15 min sem acesso** e a primeira requisição demora ~1 min. Como os dados do MVP ficam em memória, **ao dormir/reiniciar tudo volta aos dados de demonstração**. Para evitar, configure o monitor do passo 4.
+
+## 2. Front-end na Vercel
+
+1. Acesse https://vercel.com e entre com o GitHub.
+2. **Add New → Project** → importe `Hackathon-2026`.
+3. Configure:
+   - **Root Directory:** `frontend`
+   - **Framework Preset:** Vite (detectado pelo `vercel.json`)
+   - **Environment Variables:** `VITE_API_URL` = `https://recicla-pe-api.onrender.com/api` (a URL do passo 1 + `/api`)
+4. **Deploy**. Copie a URL, por exemplo `https://recicla-pe.vercel.app`.
+5. Em **Settings → Git**, confirme que a **Production Branch** é `main`.
+
+> `VITE_API_URL` é embutida no build. Se a URL da API mudar, altere a variável e faça **Redeploy**.
+
+## 3. Liberar o CORS na API
+
+No Render → `recicla-pe-api` → **Environment** → `FRONTEND_URL`:
+
+```
+https://recicla-pe.vercel.app
+```
+
+Para aceitar mais de uma origem, separe por vírgula (ex.: incluir `http://localhost:5173`). Salve: o Render reinicia a API.
+
+## 4. Manter a API acordada (monitoramento)
+
+O plano free do Render desliga a API depois de ~15 min sem requisições. Para evitar isso, um monitor externo chama o health check a cada 5 minutos, o que também serve de **monitoramento de disponibilidade** (avisa por e-mail se a API cair).
+
+**UptimeRobot (gratuito):**
+
+1. Crie uma conta em https://uptimerobot.com.
+2. **New Monitor** → tipo **HTTP(s)**.
+3. URL: `https://recicla-pe-api.onrender.com/api/health`
+4. Intervalo: **5 minutes** → **Create Monitor**.
+
+Alternativa equivalente: https://cron-job.org (job a cada 10 min para a mesma URL).
+
+Observações:
+- Uma única API ligada 24h cabe nas 750 horas/mês do plano free do Render.
+- Um **novo deploy** ou reinício ainda zera os dados de demonstração (dados em memória até a Fase 2 com PostgreSQL).
+- GitHub Actions agendado **não** é confiável para isso: o `schedule` pode atrasar mais de 15 minutos.
+- Sem dormir e sem o monitor: plano pago **Starter** do Render.
+
+## 5. Conferir
+
+- [ ] `https://<api>/api/health` responde `ok`
+- [ ] O app abre na URL da Vercel, inclusive no celular
+- [ ] Login com `morador@reciclape.demo` / `demo1234` funciona (se falhar, revise `FRONTEND_URL` e `VITE_API_URL`)
+- [ ] Mapa carrega os pontos
+- [ ] Monitor do UptimeRobot ativo (API não dorme)
+- [ ] Links atualizados no README (seção do topo)
+
+## Fluxo de publicação (Gitflow)
+
+```
+feat/*  →  PR para develop  →  PR develop → main  →  Render e Vercel publicam automaticamente
+```
+
+Pull Requests para `develop` geram **Preview Deployments** na Vercel (URL temporária). Esses previews só conseguem falar com a API se a URL deles estiver em `FRONTEND_URL`.
+
+## Problemas comuns
+
+| Sintoma | Causa provável | Solução |
+|---|---|---|
+| "Failed to fetch" / erro de rede no login | CORS ou `VITE_API_URL` errada | Conferir `FRONTEND_URL` no Render e `VITE_API_URL` na Vercel (com `/api` no final) e redeploy |
+| Primeira requisição muito lenta | API dormindo (plano free) | Configurar o monitor do passo 4 |
+| Dados sumiram | API reiniciou (dados em memória) | Esperado no MVP; PostgreSQL resolve na Fase 2 |
+| 404 ao recarregar uma página | Falta de rewrite para SPA | Já resolvido no `vercel.json` |
+| Build falha por versão do Node | Node < 22.12 | Em Vercel → Settings → Node.js Version: 22.x |

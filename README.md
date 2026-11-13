@@ -6,8 +6,9 @@
 > Solução do desafio **Antena na Lama** — Hackathon APONTI Academy: Devs Criam com IA (REC'n'Play 2026)
 > **Equipe 2** · Caminho escolhido: **Prevenir e cuidar**
 
-🔗 **Front-end (Vercel):** `<inserir-link-após-deploy>`
-🔗 **API Back-end (Render):** `<inserir-link-após-deploy>`
+🔗 **App (Vercel):** `<inserir-link-após-deploy>`
+🔗 **API (Render):** `<inserir-link-após-deploy>/api/health`
+🚀 Como publicar: [docs/DEPLOY.md](./docs/DEPLOY.md)
 🎥 **Demo / Pitch:** `<inserir-link>`
 
 | Nome | O que é |
@@ -17,7 +18,7 @@
 | **Bolsa Reciclagem** | O programa de incentivo financeiro (créditos por kg) |
 | **Índice Canal Limpo** | Os indicadores de impacto socioambiental |
 
-📘 O contexto completo do projeto (regras de negócio, perfis, modelo de dados) está no **[CONTEXT.md](./CONTEXT.md)**.
+📘 O contexto completo do projeto (regras de negócio, perfis, modelo de dados) está no **[CONTEXT.md](./CONTEXT.md)**. A especificação visual está em **[docs/FRONTEND_DESIGN.md](./docs/FRONTEND_DESIGN.md)**.
 
 ---
 
@@ -75,8 +76,11 @@ Planejados (Fase 2+): cooperativa, empresa parceira e gestor público.
 ```
 ├── CONTEXT.md              # contexto e regras do projeto (ler primeiro)
 ├── CONTRIBUTING.md         # como contribuir
-├── docs/                   # arquitetura, regras, modelo de dados, roadmap
-├── .github/workflows/      # CI (testes do back e do front + build)
+├── SECURITY.md             # política de segurança
+├── docker-compose.yml      # ambiente local com Docker
+├── render.yaml             # deploy da API no Render (infraestrutura como código)
+├── docs/                   # arquitetura, regras, modelo de dados, roadmap, DevOps, design do front
+├── .github/                # CI, DevSecOps e Dependabot
 ├── backend/                # Node.js + Express (API REST)
 │   ├── src/
 │   │   ├── app.js          # monta a API (usado pelos testes)
@@ -100,18 +104,20 @@ Detalhes em [docs/ARQUITETURA.md](./docs/ARQUITETURA.md).
 
 | Camada | Tecnologia |
 |---|---|
-| Front-end | React 18, Vite, React Router, Leaflet (mapa), qrcode.react, CSS mobile-first acessível |
+| Front-end | React 18, Vite, React Router 7, Leaflet (mapa), qrcode.react, CSS mobile-first acessível |
 | Back-end | Node.js, Express, JWT, bcrypt, Multer (upload em memória) |
 | Banco | Em memória no MVP (com seeds de demonstração) → PostgreSQL na Fase 2 |
 | IA | API multimodal de visão (opcional) + classificador de reserva por texto |
 | Testes | node:test (back-end) · Vitest + React Testing Library (front-end) |
-| CI/CD | GitHub Actions · Vercel (front) · Render (back) |
+| DevOps | Docker (multi-stage, não-root), Docker Compose, GitHub Actions, Gitflow |
+| DevSecOps | Helmet, Gitleaks, npm audit, Hadolint, Trivy, CodeQL, Dependabot |
+| Deploy | Vercel (front, `frontend/vercel.json`) · Render (API, `render.yaml`) |
 
 ---
 
 ## 🚀 Como rodar localmente
 
-Pré-requisito: **Node.js 18+**.
+Pré-requisito: **Node.js 22.12+** (ou só o Docker Desktop, ver abaixo).
 
 ### 1. Back-end
 ```bash
@@ -128,6 +134,15 @@ npm install
 cp .env.example .env        # Windows PowerShell: copy .env.example .env
 npm run dev                 # http://localhost:5173
 ```
+
+### Com Docker
+
+```bash
+copy .env.example .env      # defina JWT_SECRET no .env
+docker compose up --build   # app: http://localhost:8080 · API: http://localhost:3001/api/health
+```
+
+Containers sem root, somente leitura e com healthcheck. Detalhes em [docs/DEVOPS.md](./docs/DEVOPS.md) e [SECURITY.md](./SECURITY.md).
 
 ### Contas de demonstração
 
@@ -151,12 +166,27 @@ Senha de todas: `demo1234`
 5. **Ponto**: Registrar pesagem → Coleta em casa → número do pedido → morador e catador recebem valores separados.
 6. **Admin**: Índice Canal Limpo filtrado por município e bairro.
 
+### Documentação
+
+| Documento | Conteúdo |
+|---|---|
+| [CONTEXT.md](./CONTEXT.md) | Contexto, regras de negócio, perfis e modelo de dados |
+| [docs/ARQUITETURA.md](./docs/ARQUITETURA.md) | Arquitetura, decisões e rotas da API |
+| [docs/REGRAS_DE_NEGOCIO.md](./docs/REGRAS_DE_NEGOCIO.md) | Onde cada regra está implementada e testada |
+| [docs/MODELO_DE_DADOS.md](./docs/MODELO_DE_DADOS.md) | Modelo de dados do MVP |
+| [docs/FRONTEND_DESIGN.md](./docs/FRONTEND_DESIGN.md) | Especificação visual do front-end |
+| [docs/DEVOPS.md](./docs/DEVOPS.md) | Gitflow, Docker e pipelines |
+| [docs/DEPLOY.md](./docs/DEPLOY.md) | Passo a passo do deploy (Render + Vercel) |
+| [docs/ROADMAP.md](./docs/ROADMAP.md) | Fases do projeto |
+| [SECURITY.md](./SECURITY.md) | Política de segurança |
+| [CONTRIBUTING.md](./CONTRIBUTING.md) | Como contribuir |
+
 ### Variáveis de ambiente
 
 | Variável | Onde | Descrição |
 |---|---|---|
 | `JWT_SECRET` | back-end | Segredo para assinar os tokens |
-| `FRONTEND_URL` | back-end | Origem permitida no CORS (URL da Vercel em produção) |
+| `FRONTEND_URL` | back-end | Origens permitidas no CORS, separadas por vírgula (URL da Vercel em produção) |
 | `AI_API_KEY` | back-end | Chave da API de IA (opcional; sem ela usa o classificador de reserva) |
 | `AI_MODEL` | back-end | Modelo de IA usado na classificação |
 | `CATADOR_CENTAVOS_POR_KG` | back-end | Remuneração demo do catador por kg |
@@ -206,11 +236,11 @@ Como saber se funciona: comparar, mês a mês e bairro a bairro, o que chega pel
 ## 🧪 Testes e CI
 
 ```bash
-cd backend && npm test                      # 30 testes
+cd backend && npm test                      # 33 testes
 cd frontend && npm test && npm run build    # 4 testes + build
 ```
 
-O GitHub Actions roda tudo a cada push e PR em `main`.
+O GitHub Actions roda os testes e o pipeline de DevSecOps (Gitleaks, `npm audit`, Hadolint, Trivy e CodeQL) a cada push e PR em `main` e `develop`.
 
 | Área | O que é testado |
 |---|---|

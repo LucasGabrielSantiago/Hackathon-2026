@@ -131,3 +131,15 @@ test('indicadores filtram por município e bairro', async () => {
   const r = await api('/indicadores?municipio_id=1', { token: admin });
   assert.strictEqual(r.status, 200);
 });
+
+test('API envia cabeçalhos de segurança e esconde o framework', async () => {
+  const resp = await fetch(`${base}/health`);
+  assert.strictEqual(resp.headers.get('x-powered-by'), null);
+  assert.strictEqual(resp.headers.get('x-content-type-options'), 'nosniff');
+  assert.ok(resp.headers.get('content-security-policy'));
+});
+
+test('CORS: sem FRONTEND_URL configurado (desenvolvimento) aceita a origem', async () => {
+  const resp = await fetch(`${base}/health`, { headers: { Origin: 'http://localhost:5173' } });
+  assert.strictEqual(resp.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+});

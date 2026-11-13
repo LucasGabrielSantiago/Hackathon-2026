@@ -1,0 +1,31 @@
+# Render Blueprint — API do Recicla PE (infraestrutura como código)
+# Render → New → Blueprint → selecione este repositório.
+services:
+  - type: web
+    name: recicla-pe-api
+    runtime: node
+    plan: free
+    region: virginia
+    branch: main
+    rootDir: backend
+    buildCommand: npm ci --omit=dev
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: JWT_SECRET
+        generateValue: true # o Render gera um segredo forte; ninguém precisa copiar
+      - key: JWT_EXPIRES_IN
+        value: 8h
+      - key: FRONTEND_URL
+        sync: false # preencher no painel com a URL da Vercel
+      - key: AI_API_KEY
+        sync: false # opcional
+      - key: AI_MODEL
+        value: claude-haiku-5-5
+      - key: CATADOR_CENTAVOS_POR_KG
+        value: "80"
