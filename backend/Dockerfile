@@ -2,12 +2,12 @@
 # ---------- Recicla PE · API (Node.js) ----------
 # Multi-stage: só dependências de produção na imagem final, rodando como usuário não-root.
 
-FROM node:22-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
-FROM node:22-alpine AS runtime
+FROM node:25-alpine AS runtime
 ENV NODE_ENV=production \
     PORT=3001
 WORKDIR /app
