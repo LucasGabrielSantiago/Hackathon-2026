@@ -1,0 +1,49 @@
+# Recicla PE — ambiente local com Docker
+# Uso: copy .env.example .env  →  docker compose up --build
+# App: http://localhost:8080 · API: http://localhost:3001/api/health
+
+services:
+  backend:
+    build: ./backend
+    image: recicla-pe-backend:local
+    container_name: reciclape-backend
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      JWT_SECRET: ${JWT_SECRET:?Defina JWT_SECRET no arquivo .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_MODEL: ${AI_MODEL:-claude-haiku-5-5}
+      CATADOR_CENTAVOS_POR_KG: ${CATADOR_CENTAVOS_POR_KG:-80}
+    # Hardening do container
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:3001/api}
+    image: recicla-pe-frontend:local
+    container_name: reciclape-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped

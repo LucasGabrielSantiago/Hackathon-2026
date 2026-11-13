@@ -1,0 +1,87 @@
+name: DevSecOps - Recicla PE
+
+on:
+  push:
+    branches: ["main", "develop"]
+  pull_request:
+    branches: ["main", "develop"]
+  schedule:
+    - cron: "17 6 * * 1" # toda segunda-feira, para pegar vulnerabilidades novas
+
+permissions:
+  contents: read
+
+jobs:
+  segredos:
+    name: Varredura de segredos (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependencias:
+    name: Auditoria de dependências (npm audit)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pasta: [backend, frontend]
+    defaults:
+      run:
+        working-directory: ./${{ matrix.pasta }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci --ignore-scripts
+      - name: Bloqueia vulnerabilidades altas ou críticas
+        run: npm audit --audit-level=high
+
+  dockerfile:
+    name: Lint dos Dockerfiles (Hadolint)
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pasta: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: ${{ matrix.pasta }}/Dockerfile
+          failure-threshold: error
+
+  imagens:
+    name: Build e scan das imagens (Trivy)
+    runs-on: ubuntu-latest
+    needs: [dependencias, dockerfile]
+    strategy:
+      matrix:
+        pasta: [backend, frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build da imagem
+        run: docker build -t reciclape-${{ matrix.pasta }}:${{ github.sha }} ./${{ matrix.pasta }}
+      - name: Scan de vulnerabilidades da imagem
+        uses: aquasecurity/trivy-action@a9c7b0f06e461e9d4b4d1711f154ee024b8d7ab8 # v0.36.0
+        with:
+          image-ref: reciclape-${{ matrix.pasta }}:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+
+  codeql:
+    name: Análise estática (CodeQL)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+      - uses: github/codeql-action/analyze@v3

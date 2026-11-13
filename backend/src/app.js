@@ -1,14 +1,23 @@
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const config = require('./config');
 const { tratarErros } = require('./middlewares/erros');
 
 // Express 4 não captura erros lançados em handlers assíncronos; os síncronos chegam ao tratarErros.
 function criarApp() {
   const app = express();
+  app.disable('x-powered-by');
+  app.set('trust proxy', 1); // atrás do proxy do Render/Docker, para o IP real no limite de login
+  app.use(helmet());
   app.use(cors({ origin: config.frontendUrl === '*' ? true : config.frontendUrl }));
   app.use(express.json({ limit: '100kb' }));
 
+  app.get('/', (req, res) => res.json({
+    app: 'Recicla PE API',
+    mensagem: 'A API responde em /api. O aplicativo roda no front-end (http://localhost:5173 em desenvolvimento).',
+    saude: '/api/health',
+  }));
   app.get('/api/health', (req, res) => res.json({ status: 'ok', app: 'Recicla PE' }));
   app.use('/api/auth', require('./routes/auth'));
   app.use('/api/locais', require('./routes/locais'));
