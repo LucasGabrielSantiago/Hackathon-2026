@@ -118,6 +118,17 @@ Detalhes em [docs/ARQUITETURA.md](./docs/ARQUITETURA.md).
 ## 🚀 Como rodar localmente
 
 Pré-requisito: **Node.js 22.12+** (ou só o Docker Desktop, ver abaixo).
+📗 Guia completo (clone de uma branch, Docker × sem Docker, Gitflow e problemas comuns): **[docs/DESENVOLVIMENTO.md](./docs/DESENVOLVIMENTO.md)**
+
+### 0. Baixar o código
+```bash
+git clone https://github.com/LucasGabrielSantiago/Hackathon-2026.git
+cd Hackathon-2026
+git checkout develop
+
+# ou só uma branch (ex.: a versão em produção):
+git clone -b main --single-branch https://github.com/LucasGabrielSantiago/Hackathon-2026.git
+```
 
 ### 1. Back-end
 ```bash
@@ -162,7 +173,7 @@ Senha de todas: `demo1234`
 1. **Morador**: Classificar → "latinha de refrigerante" → Carteira → **Gerar QR Code** (copie o código).
 2. **Ponto**: Registrar pesagem → cole o código → Metal 2 kg → **Confirmar** → R$ 10,00 para o morador.
 3. **Morador**: Pedir coleta em casa.
-4. **Catador**: Aceitar o pedido → digitar o código do QR que aparece em "Meus pedidos" do morador → Confirmar coleta.
+4. **Catador**: Aceitar o pedido → digitar o código do QR que aparece na tela "Pedir coleta" do morador → Confirmar coleta.
 5. **Ponto**: Registrar pesagem → Coleta em casa → número do pedido → morador e catador recebem valores separados.
 6. **Admin**: Índice Canal Limpo filtrado por município e bairro.
 
@@ -175,6 +186,7 @@ Senha de todas: `demo1234`
 | [docs/REGRAS_DE_NEGOCIO.md](./docs/REGRAS_DE_NEGOCIO.md) | Onde cada regra está implementada e testada |
 | [docs/MODELO_DE_DADOS.md](./docs/MODELO_DE_DADOS.md) | Modelo de dados do MVP |
 | [docs/FRONTEND_DESIGN.md](./docs/FRONTEND_DESIGN.md) | Especificação visual do front-end |
+| [docs/DESENVOLVIMENTO.md](./docs/DESENVOLVIMENTO.md) | Clonar, rodar com e sem Docker, testar e abrir PR |
 | [docs/DEVOPS.md](./docs/DEVOPS.md) | Gitflow, Docker e pipelines |
 | [docs/DEPLOY.md](./docs/DEPLOY.md) | Passo a passo do deploy (Render + Vercel) |
 | [docs/ROADMAP.md](./docs/ROADMAP.md) | Fases do projeto |
