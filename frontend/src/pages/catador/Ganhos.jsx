@@ -1,24 +1,21 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api.js';
-import AvisoDemo from '../../components/AvisoDemo.jsx';
-import { reais } from '../../utils/formatar.js';
+import Alert from '../../components/common/Alert.jsx';
+import EmptyState from '../../components/common/EmptyState.jsx';
+import WalletBalance from '../../components/wallet/WalletBalance.jsx';
+import TransactionList from '../../components/wallet/TransactionList.jsx';
 
 export default function Ganhos() {
   const [carteira, setCarteira] = useState(null);
   useEffect(() => { api('/carteira').then(setCarteira).catch(() => {}); }, []);
   return (
-    <section>
-      <h1>Meus ganhos</h1>
-      <div className="cartao destaque"><span>Remuneração por coletas</span><strong>{carteira ? reais(carteira.saldo_centavos) : '…'}</strong></div>
-      <AvisoDemo>Valores demonstrativos. A remuneração do catador é separada da recompensa do morador.</AvisoDemo>
-      <ul className="lista">
-        {carteira?.extrato.map((t) => (
-          <li key={t.id} className="cartao linha">
-            <span>Entrega #{t.entrega_id}<br /><small>{new Date(t.criado_em).toLocaleString('pt-BR')}</small></span>
-            <strong className="ok">+ {reais(t.valor_centavos)}</strong>
-          </li>
-        ))}
-      </ul>
-    </section>
+    <>
+      <h1 className="titulo-1">Meus ganhos</h1>
+      <WalletBalance rotulo="Remuneração por coletas" centavos={carteira?.saldo_centavos} extra={<span>R$ 0,80 por kg entregue</span>} />
+      <Alert tipo="aviso" titulo="Valores demonstrativos">Sua remuneração é separada da recompensa do morador.</Alert>
+      <h2 className="secao">Extrato</h2>
+      {carteira && carteira.extrato.length === 0 && <EmptyState titulo="Nenhum ganho ainda" texto="Conclua uma coleta e leve ao ponto para receber." />}
+      {carteira && carteira.extrato.length > 0 && <TransactionList transacoes={carteira.extrato} />}
+    </>
   );
 }

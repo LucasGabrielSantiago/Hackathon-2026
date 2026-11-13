@@ -1,7 +1,29 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../services/api.js';
-import AvisoDemo from '../../components/AvisoDemo.jsx';
+import Alert from '../../components/common/Alert.jsx';
+import Loading from '../../components/common/Loading.jsx';
+import StatCard from '../../components/dashboard/StatCard.jsx';
 import { NOMES_MATERIAIS, reais } from '../../utils/formatar.js';
+
+function Barras({ titulo, dados, rotulo }) {
+  const max = Math.max(1, ...Object.values(dados));
+  return (
+    <div className="rp-card">
+      <p className="rp-card-titulo">{titulo}</p>
+      <table className="tabela tabela-compacta">
+        <thead><tr><th scope="col">{rotulo}</th><th scope="col">Kg</th></tr></thead>
+        <tbody>
+          {Object.entries(dados).sort((a, b) => b[1] - a[1]).map(([k, kg]) => (
+            <tr key={k}>
+              <td>{NOMES_MATERIAIS[k] || k}<div className="rp-progresso" aria-hidden="true"><span style={{ width: `${(kg / max) * 100}%` }} /></div></td>
+              <td>{kg.toLocaleString('pt-BR')}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 export default function Indicadores() {
   const [municipios, setMunicipios] = useState([]);
@@ -10,9 +32,9 @@ export default function Indicadores() {
   const [dados, setDados] = useState(null);
   const [erro, setErro] = useState('');
 
-  useEffect(() => { api('/locais/municipios').then((d) => setMunicipios(d.municipios)); }, []);
+  useEffect(() => { api('/locais/municipios').then((d) => setMunicipios(d.municipios)).catch(() => {}); }, []);
   useEffect(() => {
-    api(`/locais/bairros${filtro.municipio_id ? `?municipio_id=${filtro.municipio_id}` : ''}`).then((d) => setBairros(d.bairros));
+    api(`/locais/bairros${filtro.municipio_id ? `?municipio_id=${filtro.municipio_id}` : ''}`).then((d) => setBairros(d.bairros)).catch(() => {});
   }, [filtro.municipio_id]);
   useEffect(() => {
     const qs = new URLSearchParams(Object.entries(filtro).filter(([, v]) => v)).toString();
@@ -20,42 +42,37 @@ export default function Indicadores() {
   }, [filtro]);
 
   return (
-    <section>
-      <h1>Índice Canal Limpo</h1>
-      <div className="linha">
-        <label htmlFor="mun">Município</label>
-        <select id="mun" value={filtro.municipio_id} onChange={(e) => setFiltro({ municipio_id: e.target.value, bairro_id: '' })}>
-          <option value="">Todos</option>
-          {municipios.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
-        </select>
-        <label htmlFor="bai">Bairro</label>
-        <select id="bai" value={filtro.bairro_id} onChange={(e) => setFiltro({ ...filtro, bairro_id: e.target.value })}>
-          <option value="">Todos</option>
-          {bairros.map((b) => <option key={b.id} value={b.id}>{b.nome}</option>)}
-        </select>
+    <>
+      <h1 className="titulo-1">Índice Canal Limpo</h1>
+      <div className="grade-2">
+        <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="mun">Município</label>
+          <select className="rp-campo" id="mun" value={filtro.municipio_id} onChange={(e) => setFiltro({ municipio_id: e.target.value, bairro_id: '' })}>
+            <option value="">Todos</option>{municipios.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+          </select></div>
+        <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="bai">Bairro</label>
+          <select className="rp-campo" id="bai" value={filtro.bairro_id} onChange={(e) => setFiltro({ ...filtro, bairro_id: e.target.value })}>
+            <option value="">Todos</option>{bairros.map((b) => <option key={b.id} value={b.id}>{b.nome}</option>)}
+          </select></div>
       </div>
-      {erro && <p className="erro" role="alert">{erro}</p>}
+      {erro && <Alert tipo="erro" titulo="Não foi possível carregar">{erro}</Alert>}
+      {!dados && !erro && <Loading />}
       {dados && (
         <>
-          <div className="grade">
-            <div className="cartao destaque"><span>Kg recuperados</span><strong>{dados.ambientais.kg_recuperados.toLocaleString('pt-BR')}</strong></div>
-            <div className="cartao destaque"><span>Entregas</span><strong>{dados.ambientais.entregas}</strong></div>
-            <div className="cartao destaque"><span>Pontos ativos</span><strong>{dados.ambientais.pontos_ativos}</strong></div>
-            <div className="cartao destaque"><span>Catadores ativos</span><strong>{dados.sociais.catadores_ativos}</strong></div>
-            <div className="cartao destaque"><span>Bolsa Reciclagem distribuída</span><strong>{reais(dados.economicos.creditos_distribuidos_centavos)}</strong></div>
-            <div className="cartao destaque"><span>Renda gerada a catadores</span><strong>{reais(dados.sociais.remuneracao_catadores_centavos)}</strong></div>
+          <div className="stats">
+            <StatCard rotulo="Kg recuperados" valor={dados.ambientais.kg_recuperados.toLocaleString('pt-BR')} />
+            <StatCard rotulo="Entregas" valor={dados.ambientais.entregas} />
+            <StatCard rotulo="Pontos ativos" valor={dados.ambientais.pontos_ativos} />
+            <StatCard rotulo="Catadores ativos" valor={dados.sociais.catadores_ativos} />
+            <StatCard rotulo="Bolsa Reciclagem" valor={reais(dados.economicos.creditos_distribuidos_centavos)} />
+            <StatCard rotulo="Renda a catadores" valor={reais(dados.sociais.remuneracao_catadores_centavos)} />
           </div>
-          <h2>Kg por material</h2>
-          <ul className="lista">
-            {Object.entries(dados.ambientais.kg_por_material).map(([m, kg]) => <li key={m} className="cartao linha"><span>{NOMES_MATERIAIS[m]}</span><strong>{kg.toLocaleString('pt-BR')} kg</strong></li>)}
-          </ul>
-          <h2>Kg por bairro</h2>
-          <ul className="lista">
-            {Object.entries(dados.ambientais.kg_por_bairro).map(([b, kg]) => <li key={b} className="cartao linha"><span>{b}</span><strong>{kg.toLocaleString('pt-BR')} kg</strong></li>)}
-          </ul>
+          <div className="grade-responsiva">
+            <Barras titulo="Kg por material" rotulo="Material" dados={dados.ambientais.kg_por_material} />
+            <Barras titulo="Kg por bairro" rotulo="Bairro" dados={dados.ambientais.kg_por_bairro} />
+          </div>
         </>
       )}
-      <AvisoDemo>Indicadores calculados a partir de entregas de demonstração. Não indicam redução de alagamentos sem estudo específico.</AvisoDemo>
-    </section>
+      <Alert tipo="aviso" titulo="Dados de demonstração">Indicadores calculados a partir de entregas fictícias. Não indicam redução de alagamentos sem estudo específico.</Alert>
+    </>
   );
 }

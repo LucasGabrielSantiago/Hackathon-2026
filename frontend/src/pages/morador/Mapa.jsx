@@ -1,38 +1,40 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../services/api.js';
-import MapaPontos from '../../components/MapaPontos.jsx';
-import AvisoDemo from '../../components/AvisoDemo.jsx';
-import { NOMES_MATERIAIS } from '../../utils/formatar.js';
+import CollectionMap from '../../components/map/CollectionMap.jsx';
+import CollectionPointCard from '../../components/map/CollectionPointCard.jsx';
+import MapFilters from '../../components/map/MapFilters.jsx';
+import Alert from '../../components/common/Alert.jsx';
+import EmptyState from '../../components/common/EmptyState.jsx';
+import Loading from '../../components/common/Loading.jsx';
 
 export default function Mapa() {
-  const [pontos, setPontos] = useState([]);
+  const [pontos, setPontos] = useState(null);
   const [material, setMaterial] = useState('');
   const [erro, setErro] = useState('');
 
   useEffect(() => {
-    api(`/pontos${material ? `?material=${material}` : ''}`).then((d) => setPontos(d.pontos)).catch((e) => setErro(e.message));
+    setPontos(null);
+    api(`/pontos${material ? `?material=${material}` : ''}`).then((d) => setPontos(d.pontos)).catch((e) => { setErro(e.message); setPontos([]); });
   }, [material]);
 
   return (
-    <section>
-      <h1>Pontos de coleta</h1>
-      <label htmlFor="filtro">Material</label>
-      <select id="filtro" value={material} onChange={(e) => setMaterial(e.target.value)}>
-        <option value="">Todos</option>
-        {Object.entries(NOMES_MATERIAIS).map(([m, r]) => <option key={m} value={m}>{r}</option>)}
-      </select>
-      {erro && <p className="erro" role="alert">{erro}</p>}
-      <MapaPontos pontos={pontos} />
-      <ul className="lista">
-        {pontos.map((p) => (
-          <li key={p.id} className="cartao">
-            <strong>{p.nome}</strong> {p.demo && <span className="selo">demo</span>}
-            <span>{p.bairro} · {p.horario}</span>
-            <span>{p.materiais_aceitos.map((m) => NOMES_MATERIAIS[m]).join(', ')} · {p.modalidade === 'compra' ? 'compra' : 'doação'}</span>
-          </li>
-        ))}
-      </ul>
-      <AvisoDemo>Pontos marcados como “demo” são fictícios.</AvisoDemo>
-    </section>
+    <>
+      <h1 className="titulo-1">Pontos de coleta</h1>
+      <MapFilters valor={material} onChange={setMaterial} />
+      {erro && <Alert tipo="erro" titulo="Não foi possível carregar os pontos">{erro}</Alert>}
+      {pontos === null ? <Loading /> : (
+        <>
+          <CollectionMap pontos={pontos} />
+          {pontos.length === 0 && <EmptyState titulo="Nenhum ponto para esse material" texto="Tente outro filtro ou peça a coleta em casa." acao={<Link className="rp-btn rp-btn-primario" to="/morador/coleta">Pedir coleta</Link>} />}
+          <div className="pilha">
+            {pontos.map((p) => (
+              <CollectionPointCard key={p.id} ponto={p} acao={<Link className="rp-btn rp-btn-secundario" to="/morador/carteira">Gerar QR para entregar</Link>} />
+            ))}
+          </div>
+          {pontos.some((p) => p.demo) && <Alert tipo="aviso" titulo="Pontos de demonstração">Os pontos marcados como Demonstração são fictícios.</Alert>}
+        </>
+      )}
+    </>
   );
 }

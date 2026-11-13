@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../services/api.js';
-import { NOMES_MATERIAIS, reais } from '../../utils/formatar.js';
+import Icon from '../../components/common/Icon.jsx';
+import Alert from '../../components/common/Alert.jsx';
+import ClassificationResult from '../../components/recycling/ClassificationResult.jsx';
 
 const MAX_BYTES = 5 * 1024 * 1024;
 
 export default function Classificar() {
   const [arquivo, setArquivo] = useState(null);
-  const [previa, setPrevia] = useState('');
+  const [temPrevia, setTemPrevia] = useState(false);
+  const canvasRef = useRef(null);
   const [texto, setTexto] = useState('');
   const [resultado, setResultado] = useState(null);
   const [materiais, setMateriais] = useState([]);
@@ -15,15 +17,30 @@ export default function Classificar() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => { api('/materiais').then((d) => setMateriais(d.materiais)).catch(() => {}); }, []);
-  useEffect(() => () => previa && URL.revokeObjectURL(previa), [previa]);
 
   function escolher(e) {
     const f = e.target.files?.[0];
     setErro('');
     if (!f) return;
-    if (f.size > MAX_BYTES) { setErro('Imagem acima de 5 MB.'); return; }
+    if (f.size > MAX_BYTES) { setErro('A imagem passa de 5 MB. Tire outra foto ou escolha uma menor.'); return; }
     setArquivo(f);
-    setPrevia(URL.createObjectURL(f));
+    desenharPrevia(f);
+  }
+
+  // Prévia desenhada num canvas: o arquivo do usuário nunca vira src/URL no DOM.
+  async function desenharPrevia(f) {
+    try {
+      const bmp = await createImageBitmap(f);
+      const canvas = canvasRef.current;
+      const escala = Math.min(1, 720 / bmp.width);
+      canvas.width = Math.round(bmp.width * escala);
+      canvas.height = Math.round(bmp.height * escala);
+      canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      bmp.close();
+      setTemPrevia(true);
+    } catch {
+      setTemPrevia(false);
+    }
   }
 
   async function enviar(e) {
@@ -38,36 +55,23 @@ export default function Classificar() {
   const preco = resultado?.material && materiais.find((m) => m.nome === resultado.material);
 
   return (
-    <section>
-      <h1>Classificar resíduo</h1>
-      <form className="cartao formulario" onSubmit={enviar}>
-        <label htmlFor="foto">Foto do resíduo</label>
-        <input id="foto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={escolher} />
-        {previa && <img src={previa} alt="Prévia da foto escolhida" className="previa" />}
-        <label htmlFor="descricao">Ou descreva o item</label>
-        <input id="descricao" placeholder="Ex.: garrafa PET de refrigerante" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={300} />
-        {erro && <p className="erro" role="alert">{erro}</p>}
-        <button className="botao" type="submit" disabled={carregando || (!arquivo && !texto)}>{carregando ? 'Analisando…' : 'Classificar'}</button>
-      </form>
-
-      {resultado && (
-        <div className="cartao resultado" aria-live="polite">
-          {resultado.material ? (
-            <>
-              <h2>{NOMES_MATERIAIS[resultado.material]}{resultado.categoria ? ` · ${resultado.categoria}` : ''}</h2>
-              <p className={resultado.reciclavel ? 'ok' : 'erro'}>{resultado.reciclavel ? '✅ Reciclável' : '⚠️ Normalmente não reciclável'}</p>
-              <p>Confiança: {Math.round(resultado.confianca * 100)}% {resultado.fonte === 'reserva' && '(sem IA)'}</p>
-              {resultado.orientacoes.length > 0 && <ul>{resultado.orientacoes.map((o) => <li key={o}>{o}</li>)}</ul>}
-              {preco && resultado.reciclavel && <p>Referência: <strong>{reais(preco.preco_kg_centavos)}/kg</strong> (valor demonstrativo; o valor final sai da pesagem no ponto).</p>}
-            </>
-          ) : <h2>Não identificado</h2>}
-          <p className="nota">{resultado.observacao}</p>
-          <div className="acoes">
-            <Link to="/morador/mapa" className="botao">Ver pontos</Link>
-            <Link to="/morador/coleta" className="botao secundario">Pedir coleta</Link>
-          </div>
+    <>
+      <h1 className="titulo-1">Classificar resíduo</h1>
+      <form className="pilha" onSubmit={enviar}>
+        <label className="foto" htmlFor="foto">
+          <canvas ref={canvasRef} role="img" aria-label="Foto escolhida" hidden={!temPrevia} />
+          {!temPrevia && <><Icon name="camera" /><span>Toque para fotografar ou escolher uma imagem</span></>}
+          <input id="foto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={escolher} />
+        </label>
+        <div className="divisor">ou descreva o item</div>
+        <div className="rp-campo-grupo">
+          <label className="rp-rotulo" htmlFor="descricao">Descrição</label>
+          <input className="rp-campo" id="descricao" placeholder="garrafa PET de refrigerante" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={300} />
         </div>
-      )}
-    </section>
+        {erro && <Alert tipo="erro" titulo="Não foi possível classificar">{erro}</Alert>}
+        <button className="rp-btn rp-btn-primario rp-btn-bloco" type="submit" disabled={carregando || (!arquivo && !texto)}>{carregando ? 'Analisando…' : 'Classificar'}</button>
+      </form>
+      {resultado && <ClassificationResult resultado={resultado} preco={preco} />}
+    </>
   );
 }
