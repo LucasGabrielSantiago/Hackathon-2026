@@ -5,6 +5,8 @@ node_modules/
 .env
 .env.local
 .env.production
+# Exceção: URL pública da API do front (sem segredos)
+!frontend/.env.production
 
 # Builds
 dist/
