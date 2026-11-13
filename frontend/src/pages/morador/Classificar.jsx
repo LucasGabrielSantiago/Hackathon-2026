@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../../services/api.js';
 import Icon from '../../components/common/Icon.jsx';
 import Alert from '../../components/common/Alert.jsx';
@@ -8,7 +8,8 @@ const MAX_BYTES = 5 * 1024 * 1024;
 
 export default function Classificar() {
   const [arquivo, setArquivo] = useState(null);
-  const [previa, setPrevia] = useState('');
+  const [temPrevia, setTemPrevia] = useState(false);
+  const canvasRef = useRef(null);
   const [texto, setTexto] = useState('');
   const [resultado, setResultado] = useState(null);
   const [materiais, setMateriais] = useState([]);
@@ -16,7 +17,6 @@ export default function Classificar() {
   const [carregando, setCarregando] = useState(false);
 
   useEffect(() => { api('/materiais').then((d) => setMateriais(d.materiais)).catch(() => {}); }, []);
-  useEffect(() => () => previa && URL.revokeObjectURL(previa), [previa]);
 
   function escolher(e) {
     const f = e.target.files?.[0];
@@ -24,7 +24,23 @@ export default function Classificar() {
     if (!f) return;
     if (f.size > MAX_BYTES) { setErro('A imagem passa de 5 MB. Tire outra foto ou escolha uma menor.'); return; }
     setArquivo(f);
-    setPrevia(URL.createObjectURL(f));
+    desenharPrevia(f);
+  }
+
+  // Prévia desenhada num canvas: o arquivo do usuário nunca vira src/URL no DOM.
+  async function desenharPrevia(f) {
+    try {
+      const bmp = await createImageBitmap(f);
+      const canvas = canvasRef.current;
+      const escala = Math.min(1, 720 / bmp.width);
+      canvas.width = Math.round(bmp.width * escala);
+      canvas.height = Math.round(bmp.height * escala);
+      canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      bmp.close();
+      setTemPrevia(true);
+    } catch {
+      setTemPrevia(false);
+    }
   }
 
   async function enviar(e) {
@@ -43,7 +59,8 @@ export default function Classificar() {
       <h1 className="titulo-1">Classificar resíduo</h1>
       <form className="pilha" onSubmit={enviar}>
         <label className="foto" htmlFor="foto">
-          {previa ? <img src={previa} alt="Foto escolhida" /> : <><Icon name="camera" /><span>Toque para fotografar ou escolher uma imagem</span></>}
+          <canvas ref={canvasRef} role="img" aria-label="Foto escolhida" hidden={!temPrevia} />
+          {!temPrevia && <><Icon name="camera" /><span>Toque para fotografar ou escolher uma imagem</span></>}
           <input id="foto" type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={escolher} />
         </label>
         <div className="divisor">ou descreva o item</div>
