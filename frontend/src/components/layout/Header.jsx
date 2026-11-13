@@ -6,7 +6,7 @@ export default function Header() {
   return (
     <header className="rp-header">
       <Link to="/" className="rp-marca" aria-label="Recicla PE, página inicial">
-        <img src="/logo.svg" alt="" width="24" height="26" />
+        <img src="/logo.svg" alt="" width="28" height="28" />
         Recicla <span>PE</span>
       </Link>
       {usuario ? (

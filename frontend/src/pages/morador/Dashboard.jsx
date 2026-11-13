@@ -36,7 +36,7 @@ export default function Dashboard() {
         <Link className="atalho" to="/morador/classificar"><Icon name="camera" />Classificar resíduo</Link>
         <Link className="atalho" to="/morador/mapa"><Icon name="pin" />Pontos de coleta</Link>
         <Link className="atalho" to="/morador/coleta"><Icon name="truck" />Pedir coleta em casa</Link>
-        <Link className="atalho" to="/morador/carteira"><Icon name="scan" />Gerar QR Code</Link>
+        <Link className="atalho" to="/morador/carteira?gerar=1"><Icon name="scan" />Gerar QR Code</Link>
       </div>
       {atividades.length > 0 && (
         <>

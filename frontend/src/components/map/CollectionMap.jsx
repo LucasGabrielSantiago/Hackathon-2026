@@ -2,7 +2,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-const icone = L.icon({ iconUrl: '/logo.svg', iconSize: [28, 30], iconAnchor: [14, 30], popupAnchor: [0, -28] });
+const icone = L.icon({ iconUrl: '/logo.svg', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -30] });
 
 export default function CollectionMap({ pontos, centro = [-8.0476, -34.877] }) {
   return (

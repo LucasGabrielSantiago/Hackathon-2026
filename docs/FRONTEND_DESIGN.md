@@ -16,6 +16,10 @@ Conceito ambiental: Canal Limpo
 
 Slogan: Reciclar gera renda. Cuidar transforma cidades.
 
+Símbolo: três setas da reciclagem formando um ciclo (tons de verde #168548, #116437 e #1F9D57) com uma folha azul (#168AAD) no centro, unindo reciclagem, ecologia e a água dos canais.
+Arquivos: frontend/public/logo.svg (com folha, para cabeçalho, documentação e marcador do mapa) e frontend/public/favicon.svg (só as setas, legível em 16 px).
+Não usar o símbolo sobre fundo verde escuro sem uma área branca ao redor.
+
 1.2. Objetivo visual
 
 O Recicla PE deve transmitir:

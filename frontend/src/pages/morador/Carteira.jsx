@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
 import EmptyState from '../../components/common/EmptyState.jsx';
@@ -11,6 +12,8 @@ export default function Carteira() {
   const [kg, setKg] = useState(0);
   const [qr, setQr] = useState(null);
   const [erro, setErro] = useState('');
+  const [gerando, setGerando] = useState(false);
+  const [params, setParams] = useSearchParams();
 
   useEffect(() => {
     api('/carteira').then(setCarteira).catch((e) => setErro(e.message));
@@ -18,20 +21,30 @@ export default function Carteira() {
   }, []);
 
   async function gerarQr() {
-    setErro('');
-    try { setQr(await api('/entregas/qrcode', { metodo: 'POST' })); } catch (e) { setErro(e.message); }
+    setErro(''); setGerando(true);
+    try { setQr(await api('/entregas/qrcode', { metodo: 'POST' })); } catch (e) { setErro(e.message); } finally { setGerando(false); }
   }
+
+  // Atalhos "Gerar QR Code" (início e mapa) chegam com ?gerar=1 e já mostram o código.
+  useEffect(() => {
+    if (params.get('gerar') === '1') { setParams({}, { replace: true }); gerarQr(); }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
       <h1 className="titulo-1">Carteira</h1>
       <WalletBalance centavos={carteira?.saldo_centavos} kg={kg} extra={<span>Resgate em breve</span>} />
       <Alert tipo="aviso" titulo="Valores demonstrativos">{carteira?.aviso || 'Os créditos ainda não podem ser resgatados.'}</Alert>
-      {qr ? <QRCodeDisplay codigo={qr.codigo} validade={qr.expira_em} /> : (
+      {qr ? (
+        <>
+          <QRCodeDisplay codigo={qr.codigo} validade={qr.expira_em} />
+          <button className="rp-btn rp-btn-fantasma rp-btn-bloco" type="button" onClick={gerarQr} disabled={gerando}>Gerar outro código</button>
+        </>
+      ) : (
         <div className="rp-card">
           <p className="rp-card-titulo">Entregar num ponto de coleta</p>
           <p className="rp-card-texto">Gere o código e mostre ao operador na hora da pesagem.</p>
-          <button className="rp-btn rp-btn-primario" type="button" onClick={gerarQr}>Gerar QR Code</button>
+          <button className="rp-btn rp-btn-primario" type="button" onClick={gerarQr} disabled={gerando}>{gerando ? 'Gerando…' : 'Gerar QR Code'}</button>
         </div>
       )}
       {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
