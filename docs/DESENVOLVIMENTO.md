@@ -182,7 +182,7 @@ Senha de todas as contas: `demo1234`
 | Ponto de coleta | ponto@reciclape.demo |
 | Admin | admin@reciclape.demo |
 
-> Os dados ficam **em memória**: ao reiniciar a API, tudo volta ao estado inicial, inclusive os QR Codes já gerados.
+> Sem `DATABASE_URL`, a API local guarda os dados em `backend/.dados-local.json` (fora do Git): contas, pedidos e QR Codes **continuam** quando o `npm run dev` reinicia a API ao salvar um arquivo. Para voltar aos dados de demonstração, pare a API e apague esse arquivo. `DADOS_LOCAIS=off` deixa tudo só em memória.
 
 ---
 
@@ -232,5 +232,6 @@ Abra o Pull Request **para `develop`**:
 | Login dá "Failed to fetch" ou erro de CORS | `FRONTEND_URL` não inclui o endereço do front | No `backend/.env`, use `FRONTEND_URL=http://localhost:5173` (vários separados por vírgula) |
 | `Defina JWT_SECRET no arquivo .env` | `.env` da raiz sem segredo (Docker) | Preencha `JWT_SECRET` no `.env` da **raiz**, não no `backend/.env` |
 | Erro de versão do Node / `engines` | Node abaixo de 22.12 | Instale o Node LTS atual |
-| QR Code "inválido" na pesagem | A API reiniciou e apagou os dados em memória | Gere um novo QR Code |
+| QR Code "inválido" na pesagem | Dados locais apagados (arquivo `.dados-local.json` removido) | Gere um novo QR Code |
+| Conta criada dá "E-mail ou senha inválidos" | A conta foi criada em outra API (local × produção) ou os dados locais foram apagados | Crie a conta de novo no mesmo ambiente em que vai entrar |
 | Primeiro acesso ao app publicado demora | A API no Render "dorme" sem uso | Espere 30–50 s e tente de novo |

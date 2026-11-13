@@ -46,6 +46,15 @@ const { _reset: zerarLimiteLogin } = require('../src/middlewares/limiteLogin');
 const login = async (email) => { zerarLimiteLogin(); return loginBruto(email); };
 const loginBruto = async (email) => (await api('/auth/login', { metodo: 'POST', corpo: { email, senha: 'demo1234' } })).body.token;
 
+test('cadastro aceita e-mail com espaço sobrando (teclado do celular) e o login funciona', async () => {
+  const cad = await api('/auth/cadastro', { metodo: 'POST', corpo: { nome: 'Bia', email: ' Bia.Souza@Teste.com ', senha: '12345678', perfil: 'morador', bairro_id: 1 } });
+  assert.strictEqual(cad.status, 201);
+  assert.strictEqual(cad.body.usuario.email, 'bia.souza@teste.com');
+  zerarLimiteLogin();
+  const log = await api('/auth/login', { metodo: 'POST', corpo: { email: 'Bia.Souza@teste.com ', senha: '12345678' } });
+  assert.strictEqual(log.status, 200);
+});
+
 test('cadastro e login de morador', async () => {
   const cad = await api('/auth/cadastro', { metodo: 'POST', corpo: { nome: 'Ana', email: 'ana@teste.com', senha: '12345678', perfil: 'morador', bairro_id: 1 } });
   assert.strictEqual(cad.status, 201);

@@ -170,7 +170,7 @@ Senha de todas: `demo1234`
 
 Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovados (2 ecopontos de **lixo eletrônico**) e 6 pedidos de coleta em casa **aguardando retirada**, cada um com a foto dos materiais. Materiais: plástico, metal, vidro, papel/papelão, **lixo eletrônico** e **outros**. No código o perfil se chama `catador`; na interface aparece como **coletor(a) de recicláveis**.
 
-> 💾 **Persistência:** com `DATABASE_URL` (PostgreSQL, ex.: [Neon](https://neon.tech) gratuito), a API carrega os dados do banco ao iniciar e salva uma cópia a cada alteração (cadastros, pedidos, fotos, entregas). Sem `DATABASE_URL`, os dados ficam só em memória e voltam ao estado de demonstração quando a API reinicia. O admin pode **restaurar os dados de demonstração** em Aprovações. Detalhes em [docs/DEPLOY.md](./docs/DEPLOY.md#persistência-neon).
+> 💾 **Persistência:** com `DATABASE_URL` (PostgreSQL, ex.: [Neon](https://neon.tech) gratuito), a API carrega os dados do banco ao iniciar e salva uma cópia a cada alteração (cadastros, pedidos, fotos, entregas). Sem `DATABASE_URL`, no desenvolvimento local os dados ficam em `backend/.dados-local.json` (sobrevivem ao reinício da API); em produção sem banco, só em memória. O admin pode **restaurar os dados de demonstração** em Aprovações. Detalhes em [docs/DEPLOY.md](./docs/DEPLOY.md#persistência-neon).
 
 ### Roteiro de demonstração
 

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react';
-import { buscarCep, formatarCep, geocodificar, somenteDigitos } from '../../services/mapas.js';
+import Icon from '../common/Icon.jsx';
+import { buscarCep, enderecoPorCoordenadas, formatarCep, geocodificar, somenteDigitos } from '../../services/mapas.js';
 
 const SeletorLocal = lazy(() => import('./SeletorLocal.jsx'));
 
@@ -39,18 +40,43 @@ export default function CampoEndereco({ valor, onChange, bairros = [], comMapa =
     } catch (err) { setAviso(err.message); } finally { setBuscando(false); }
   }
 
+  // Preenche rua, número, bairro, cidade e CEP a partir de um ponto (GPS ou pino).
+  // `sobrescrever` = true no botão de GPS; ao mexer no pino só completa o que está vazio.
+  async function preencherPorPonto(base, pos, sobrescrever) {
+    setBuscando(true);
+    try {
+      const r = await enderecoPorCoordenadas(pos);
+      const bairro = bairros.find((b) => normalizar(b.nome) === normalizar(r.bairro));
+      const campos = Object.fromEntries(Object.entries(r).filter(([k, v]) => v && (sobrescrever || !base[k])));
+      const bairroId = bairro && (sobrescrever || !base.bairro_id) ? { bairro_id: String(bairro.id) } : {};
+      onChange({ ...base, ...campos, ...bairroId, ...pos });
+      const faltando = [!r.numero && 'o número', !bairro && comBairro && 'o bairro'].filter(Boolean);
+      setAviso(faltando.length ? `Endereço preenchido pela localização. Confira e informe ${faltando.join(' e ')}.` : 'Endereço preenchido pela localização. Confira os dados e o pino.');
+    } catch (err) { onChange({ ...base, ...pos }); setAviso(err.message); } finally { setBuscando(false); }
+  }
+
   function minhaLocalizacao() {
     if (!navigator.geolocation) { setAviso('Seu aparelho não informa a localização.'); return; }
+    setAviso('Buscando sua localização…');
     navigator.geolocation.getCurrentPosition(
-      (p) => { mudar({ latitude: p.coords.latitude, longitude: p.coords.longitude }); setAviso('Localização atual marcada. Confira o pino no mapa.'); },
+      (p) => preencherPorPonto(valor, { latitude: p.coords.latitude, longitude: p.coords.longitude }, true),
       () => setAviso('Permita o acesso à localização ou marque o local no mapa.'),
       { enableHighAccuracy: true, timeout: 10000 },
     );
   }
 
+  function moverPino(pos) {
+    if (!valor.logradouro) { preencherPorPonto(valor, pos, false); return; }
+    mudar(pos); setAviso('');
+  }
+
   return (
     <fieldset className="rp-card pilha" style={{ gap: 'var(--espaco-3)' }}>
       <legend className="rp-rotulo">Endereço</legend>
+      <button className="rp-btn rp-btn-secundario rp-btn-bloco" type="button" onClick={minhaLocalizacao} disabled={buscando}>
+        <Icon name="pin" />{buscando ? 'Buscando…' : 'Usar minha localização'}
+      </button>
+      <span className="rp-ajuda">Preenche rua, número, bairro e CEP pelo GPS. Ou digite o CEP abaixo.</span>
       <div className="grade-2">
         <div className="rp-campo-grupo">
           <label className="rp-rotulo" htmlFor={`${id}-cep`}>CEP</label>
@@ -83,12 +109,9 @@ export default function CampoEndereco({ valor, onChange, bairros = [], comMapa =
       </div>
       {comMapa && (
         <>
-          <div className="linha">
-            <button className="rp-btn rp-btn-secundario" type="button" onClick={() => localizar()} disabled={buscando} style={{ flex: 1 }}>{buscando ? 'Buscando…' : 'Localizar no mapa'}</button>
-            <button className="rp-btn rp-btn-fantasma" type="button" onClick={minhaLocalizacao} style={{ flex: 1 }}>Usar minha localização</button>
-          </div>
+          <button className="rp-btn rp-btn-fantasma rp-btn-bloco" type="button" onClick={() => localizar()} disabled={buscando}>{buscando ? 'Buscando…' : 'Localizar no mapa pelo endereço'}</button>
           <Suspense fallback={<p className="apoio">Carregando mapa…</p>}>
-            <SeletorLocal valor={valor.latitude != null ? { latitude: valor.latitude, longitude: valor.longitude } : null} onChange={(pos) => { mudar(pos); setAviso(''); }} />
+            <SeletorLocal valor={valor.latitude != null ? { latitude: valor.latitude, longitude: valor.longitude } : null} onChange={moverPino} />
           </Suspense>
           <span className="rp-ajuda">{valor.latitude != null ? 'Confira o pino. Se estiver no lugar errado, arraste ou toque no ponto certo.' : 'Preencha o CEP e o número para marcar no mapa.'}</span>
         </>

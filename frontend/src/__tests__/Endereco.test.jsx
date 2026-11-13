@@ -69,3 +69,29 @@ describe('Localização com tentativas', () => {
     await expect(geocodificar({ logradouro: 'Rua X', cidade: 'Recife' }, { intervaloMs: 0 })).rejects.toThrow('Toque no mapa');
   });
 });
+
+describe('Endereço pelo GPS', () => {
+  it('"Usar minha localização" preenche rua, número, bairro, cidade e CEP', async () => {
+    global.fetch = vi.fn(() => Promise.resolve({ json: async () => ({ address: { road: 'Rua dos Navegantes', house_number: '250', suburb: 'Boa Viagem', city: 'Recife', 'ISO3166-2-lvl4': 'BR-PE', postcode: '51021010' } }) }));
+    Object.defineProperty(global.navigator, 'geolocation', { configurable: true, value: { getCurrentPosition: (ok) => ok({ coords: { latitude: -8.12, longitude: -34.9 } }) } });
+    render(<Teste />);
+    await userEvent.click(screen.getByRole('button', { name: /Usar minha localização/ }));
+    expect(await screen.findByDisplayValue('Rua dos Navegantes')).toBeInTheDocument();
+    expect(screen.getByLabelText('Número')).toHaveValue('250');
+    expect(screen.getByLabelText('CEP')).toHaveValue('51021-010');
+    expect(screen.getByLabelText('Bairro')).toHaveValue('1');
+    expect(screen.getByLabelText('Cidade')).toHaveValue('Recife/PE');
+    expect(JSON.parse(screen.getByTestId('saida').textContent)).toMatchObject({ latitude: -8.12, longitude: -34.9 });
+    expect(String(global.fetch.mock.calls[0][0])).toContain('nominatim.openstreetmap.org/reverse');
+  });
+
+  it('sem CEP no mapa, busca o CEP da rua no ViaCEP', async () => {
+    const { enderecoPorCoordenadas } = await import('../services/mapas.js');
+    global.fetch = vi.fn((url) => Promise.resolve({ json: async () => (String(url).includes('nominatim')
+      ? { address: { road: 'Rua da Aurora', suburb: 'Boa Vista', city: 'Recife', 'ISO3166-2-lvl4': 'BR-PE' } }
+      : [{ cep: '50050-000' }]) }));
+    const r = await enderecoPorCoordenadas({ latitude: -8.06, longitude: -34.88 });
+    expect(r).toMatchObject({ logradouro: 'Rua da Aurora', numero: '', bairro: 'Boa Vista', cep: '50050-000', uf: 'PE' });
+    expect(String(global.fetch.mock.calls[1][0])).toBe('https://viacep.com.br/ws/PE/Recife/Rua%20da%20Aurora/json/');
+  });
+});

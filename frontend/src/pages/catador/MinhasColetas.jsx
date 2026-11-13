@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
 import EmptyState from '../../components/common/EmptyState.jsx';
@@ -14,6 +15,8 @@ export default function MinhasColetas() {
   const [codigos, setCodigos] = useState({});
   const [erro, setErro] = useState('');
   const [msg, setMsg] = useState('');
+  const [params] = useSearchParams();
+  const recemAceito = params.get('compartilhar');
 
   const carregar = () => api('/pedidos/minhas-coletas').then((d) => setColetas(d.pedidos.slice().reverse())).catch((e) => { setErro(e.message); setColetas([]); });
   useEffect(() => { carregar(); }, []);
@@ -26,6 +29,7 @@ export default function MinhasColetas() {
   return (
     <>
       <h1 className="titulo-1">Minhas coletas</h1>
+      {recemAceito && !msg && !erro && <Alert tipo="sucesso" titulo={`Pedido #${recemAceito} aceito`}>O morador já sabe que você vai buscar. Sua localização aparece para ele enquanto você vai até lá.</Alert>}
       {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
       {msg && <Alert tipo="sucesso" titulo="Pronto">{msg}</Alert>}
       {coletas === null ? <Loading /> : coletas.length === 0 ? (
@@ -36,7 +40,7 @@ export default function MinhasColetas() {
             <div key={p.id} className="rp-card">
               <div className="entre"><p className="rp-card-titulo">Pedido #{p.id}</p><StatusPedido status={p.status} /></div>
               <RecyclingProgress status={p.status} />
-              {p.status === 'aceito' && <RotaColetor pedido={p} />}
+              {p.status === 'aceito' && <RotaColetor pedido={p} autoCompartilhar={String(p.id) === recemAceito} />}
               {p.tem_foto && <FotoPedido pedidoId={p.id} />}
               <p className="rp-card-texto"><b>{p.endereco}</b> · {p.janela_horario}</p>
               <p className="rp-card-texto">{resumoMateriais(p)}</p>

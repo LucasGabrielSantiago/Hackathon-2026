@@ -8,13 +8,17 @@ img { max-width: 100%; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* Estrutura */
-.app { min-height: 100vh; display: flex; flex-direction: column; }
+.app { min-height: 100vh; display: flex; flex-direction: column; overflow-x: clip; }
 .app .rp-header { position: sticky; top: 0; z-index: 1000; }
 .app-corpo { flex: 1; display: flex; }
-.conteudo { flex: 1; width: 100%; max-width: var(--largura-max); margin: 0 auto; padding: var(--espaco-4) var(--espaco-4) calc(var(--barra-inferior) + var(--espaco-6)); display: flex; flex-direction: column; gap: var(--espaco-4); }
+.conteudo { flex: 1; min-width: 0; width: 100%; max-width: var(--largura-max); margin: 0 auto; padding: var(--espaco-4) var(--espaco-4) calc(var(--barra-inferior) + var(--espaco-6)); display: flex; flex-direction: column; gap: var(--espaco-4); }
 .conteudo-publico { padding-bottom: var(--espaco-6); }
 .app .rp-nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 1000; padding-bottom: env(safe-area-inset-bottom); height: calc(var(--barra-inferior) + env(safe-area-inset-bottom)); }
 .app .rp-nav-item { min-height: var(--toque-min); }
+/* Barra inferior: cada item divide a largura e o rótulo nunca empurra a tela */
+.rp-nav-item { min-width: 0; padding: 0 2px; }
+.rp-nav-rotulo { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; line-height: 16px; }
+@media (max-width: 359px) { .rp-nav-item { font-size: 11px; } .rp-nav-item svg { width: 22px; height: 22px; } }
 .app .rp-sidebar { display: none; }
 
 /* Tipografia de tela */
@@ -33,6 +37,7 @@ img { max-width: 100%; }
 .centro { text-align: center; }
 .rp-chips { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
 .rp-chip { white-space: nowrap; cursor: pointer; font-family: var(--font-texto); }
+fieldset { min-width: 0; } /* fieldset não encolhe por padrão e estourava a tela no celular */
 fieldset.rp-card { margin: 0; }
 fieldset.rp-card legend { padding: 0 4px; }
 .rp-btn svg, .ico { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
