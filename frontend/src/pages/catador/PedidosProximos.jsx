@@ -5,9 +5,10 @@ import Alert from '../../components/common/Alert.jsx';
 import Badge from '../../components/common/Badge.jsx';
 import EmptyState from '../../components/common/EmptyState.jsx';
 import Loading from '../../components/common/Loading.jsx';
+import FotoPedido from '../../components/pedido/FotoPedido.jsx';
 import { NOMES_MATERIAIS } from '../../utils/formatar.js';
 
-export const resumoMateriais = (p) => p.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material]} ${m.quantidade_kg} kg`).join(' · ');
+export const resumoMateriais = (p) => p.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material] || m.material} ${m.quantidade_kg} kg`).join(' · ');
 
 export default function PedidosProximos() {
   const [proximos, setProximos] = useState(null);
@@ -25,6 +26,7 @@ export default function PedidosProximos() {
   return (
     <>
       <h1 className="titulo-1">Pedidos perto de você</h1>
+      <p className="apoio">Moradores do seu bairro aguardando a retirada dos recicláveis. Veja a foto antes de aceitar.</p>
       {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
       {msg && <Alert tipo="sucesso" titulo="Pedido aceito">{msg} <Link to="/catador/coletas">Ver coletas</Link></Alert>}
       {proximos === null ? <Loading /> : proximos.length === 0 ? (
@@ -33,7 +35,8 @@ export default function PedidosProximos() {
         <div className="pilha">
           {proximos.map((p) => (
             <div key={p.id} className="rp-card">
-              <div className="entre"><p className="rp-card-titulo">#{p.id} · {p.bairro}</p><Badge tipo="aviso">Aberto</Badge></div>
+              <div className="entre"><p className="rp-card-titulo">#{p.id} · {p.bairro}</p><Badge tipo="aviso">{p.demo ? 'Demonstração' : 'Aguardando retirada'}</Badge></div>
+              {p.tem_foto && <FotoPedido pedidoId={p.id} alt={`Foto dos materiais do pedido ${p.id}`} />}
               <p className="rp-card-texto">{resumoMateriais(p)}</p>
               <p className="rp-card-texto">{p.janela_horario}</p>
               <button className="rp-btn rp-btn-primario rp-btn-bloco" type="button" onClick={() => aceitar(p.id)}>Aceitar coleta</button>

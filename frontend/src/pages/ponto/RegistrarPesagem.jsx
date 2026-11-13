@@ -37,7 +37,7 @@ export default function RegistrarPesagem() {
       <h1 className="titulo-1">Receber entrega</h1>
       <div className="rp-abas" role="tablist">
         <button type="button" role="tab" aria-selected={modo === 'qr'} className={`rp-aba${modo === 'qr' ? ' rp-aba-ativa' : ''}`} onClick={() => setModo('qr')}>QR do morador</button>
-        <button type="button" role="tab" aria-selected={modo === 'pedido'} className={`rp-aba${modo === 'pedido' ? ' rp-aba-ativa' : ''}`} onClick={() => setModo('pedido')}>Coleta do catador</button>
+        <button type="button" role="tab" aria-selected={modo === 'pedido'} className={`rp-aba${modo === 'pedido' ? ' rp-aba-ativa' : ''}`} onClick={() => setModo('pedido')}>Coleta do coletor</button>
       </div>
       <form className="pilha" onSubmit={enviar}>
         {modo === 'qr' ? (
@@ -73,7 +73,7 @@ export default function RegistrarPesagem() {
           <p className="rp-card-texto">{(resultado.entrega.peso_total_gramas / 1000).toLocaleString('pt-BR')} kg pesados</p>
           <div className="total"><span>Bolsa Reciclagem (morador)</span><b className="rp-credito">{reais(resultado.entrega.recompensa_centavos)}</b></div>
           {resultado.entrega.remuneracao_catador_centavos !== undefined && (
-            <div className="total"><span>Remuneração do catador</span><b>{reais(resultado.entrega.remuneracao_catador_centavos)}</b></div>
+            <div className="total"><span>Remuneração do coletor</span><b>{reais(resultado.entrega.remuneracao_catador_centavos)}</b></div>
           )}
         </div>
       )}

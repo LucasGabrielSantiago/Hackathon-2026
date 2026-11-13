@@ -6,6 +6,7 @@ import Loading from '../../components/common/Loading.jsx';
 import { StatusPedido } from '../../components/common/Badge.jsx';
 import RecyclingProgress from '../../components/recycling/RecyclingProgress.jsx';
 import { resumoMateriais } from './PedidosProximos.jsx';
+import FotoPedido from '../../components/pedido/FotoPedido.jsx';
 
 export default function MinhasColetas() {
   const [coletas, setColetas] = useState(null);
@@ -34,6 +35,7 @@ export default function MinhasColetas() {
             <div key={p.id} className="rp-card">
               <div className="entre"><p className="rp-card-titulo">Pedido #{p.id}</p><StatusPedido status={p.status} /></div>
               <RecyclingProgress status={p.status} />
+              {p.tem_foto && <FotoPedido pedidoId={p.id} />}
               <p className="rp-card-texto"><b>{p.endereco}</b> · {p.janela_horario}</p>
               <p className="rp-card-texto">{resumoMateriais(p)}</p>
               {p.status === 'aceito' && (

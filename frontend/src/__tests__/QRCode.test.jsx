@@ -24,7 +24,7 @@ describe('QR Codes', () => {
     expect(screen.getByTitle('QR Code de entrega')).toBeInTheDocument();
   });
 
-  it('pedido de coleta aberto já mostra o QR para o catador', async () => {
+  it('pedido de coleta aberto já mostra o QR para o coletor', async () => {
     mockApi({
       '/pedidos/meus': { pedidos: [{ id: 7, status: 'aberto', qr_code: 'COD-PEDIDO-7', janela_horario: 'Manhã', materiais_estimados: [{ material: 'plastico', quantidade_kg: 3 }] }] },
       '/locais/bairros': { bairros: [] },

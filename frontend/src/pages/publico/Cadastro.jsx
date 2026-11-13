@@ -5,7 +5,7 @@ import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
 import { NOMES_MATERIAIS } from '../../utils/formatar.js';
 
-const PERFIS = [['morador', 'Morador(a)'], ['catador', 'Catador(a)'], ['ponto', 'Ponto de coleta ou cooperativa']];
+const PERFIS = [['morador', 'Morador(a)'], ['catador', 'Coletor(a) de recicláveis'], ['ponto', 'Ponto de coleta ou cooperativa']];
 
 export default function Cadastro() {
   const { cadastrar } = useAuth();
@@ -70,10 +70,12 @@ export default function Cadastro() {
         </fieldset>
       )}
       <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="senha">Senha</label><input className="rp-campo" id="senha" type="password" minLength={8} autoComplete="new-password" value={dados.senha} onChange={mudar('senha')} required /><span className="rp-ajuda">Mínimo de 8 caracteres.</span></div>
-      <label className="rp-opcao"><input type="checkbox" checked={dados.aceite} onChange={mudar('aceite')} /> Li e aceito os termos de uso e a política de privacidade</label>
+      <label className="rp-opcao"><input type="checkbox" checked={dados.aceite} onChange={mudar('aceite')} />
+        <span>Li e aceito os <Link to="/termos" target="_blank" rel="noopener noreferrer">termos de uso</Link> e a <Link to="/privacidade" target="_blank" rel="noopener noreferrer">política de privacidade</Link></span>
+      </label>
       {erro && <Alert tipo="erro" titulo="Não foi possível criar a conta">{erro}</Alert>}
       <button className="rp-btn rp-btn-primario rp-btn-bloco" type="submit" disabled={enviando}>{enviando ? 'Criando…' : 'Criar conta'}</button>
-      {dados.perfil !== 'morador' && <p className="apoio centro">Catadores e pontos passam por aprovação antes de receber pedidos.</p>}
+      {dados.perfil !== 'morador' && <p className="apoio centro">Coletores e pontos passam por aprovação antes de receber pedidos.</p>}
       <p className="apoio centro">Já tem conta? <Link to="/login">Entrar</Link></p>
     </form>
   );

@@ -159,12 +159,16 @@ Containers sem root, somente leitura e com healthcheck. Detalhes em [docs/DEVOPS
 
 Senha de todas: `demo1234`
 
-| Perfil | E-mail |
-|---|---|
-| Morador | morador@reciclape.demo |
-| Catador (já aprovado) | catador@reciclape.demo |
-| Ponto de coleta | ponto@reciclape.demo |
-| Admin | admin@reciclape.demo |
+| Perfil | E-mail | O que tem |
+|---|---|---|
+| Morador | morador@reciclape.demo | Boa Viagem, carteira zerada |
+| Coletor(a) de recicláveis (aprovado) | catador@reciclape.demo | Atende Boa Viagem e São José; já vê 3 pedidos com foto aguardando retirada |
+| Ponto de coleta | ponto@reciclape.demo | Dono do "Ponto Demo Boa Viagem" |
+| Admin | admin@reciclape.demo | Tem 1 coletora e 1 ponto aguardando aprovação |
+| Outros coletores | josefa@ e severino@reciclape.demo (aprovados), rita@reciclape.demo (pendente) | Bairros diferentes |
+| Outros moradores | maria@, joao@, ana@ e carlos@reciclape.demo | Donos dos 6 pedidos de demonstração |
+
+Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovados (2 ecopontos de **lixo eletrônico**) e 6 pedidos de coleta em casa **aguardando retirada**, cada um com a foto dos materiais. Materiais: plástico, metal, vidro, papel/papelão, **lixo eletrônico** e **outros**. No código o perfil se chama `catador`; na interface aparece como **coletor(a) de recicláveis**.
 
 > ⚠️ O MVP guarda os dados **em memória**: ao reiniciar o back-end, tudo volta ao estado inicial de demonstração.
 
@@ -172,10 +176,11 @@ Senha de todas: `demo1234`
 
 1. **Morador**: Classificar → "latinha de refrigerante" → Carteira → **Gerar QR Code** (copie o código).
 2. **Ponto**: Registrar pesagem → cole o código → Metal 2 kg → **Confirmar** → R$ 10,00 para o morador.
-3. **Morador**: Pedir coleta em casa.
-4. **Catador**: Aceitar o pedido → digitar o código do QR que aparece na tela "Pedir coleta" do morador → Confirmar coleta.
-5. **Ponto**: Registrar pesagem → Coleta em casa → número do pedido → morador e catador recebem valores separados.
-6. **Admin**: Índice Canal Limpo filtrado por município e bairro.
+3. **Morador**: Pedir coleta em casa → **foto dos materiais (obrigatória)** → quantidades → bairro Boa Viagem ou São José.
+4. **Coletor** (`catador@`): vê a foto antes de aceitar → Aceitar → digitar o código do QR que aparece na tela "Pedir coleta" do morador → Confirmar coleta.
+5. **Ponto**: Registrar pesagem → Coleta do coletor → número do pedido → morador e coletor recebem valores separados.
+6. **Esqueci minha senha** (local): no login → informe o e-mail → "Abrir link de demonstração" → nova senha. Em produção o link não aparece na tela (envio por e-mail fica para a Fase 2).
+7. **Admin**: Aprovações (coletora Rita e ponto do Severino) e Índice Canal Limpo filtrado por município e bairro.
 
 ### Documentação
 

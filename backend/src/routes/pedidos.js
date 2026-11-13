@@ -1,5 +1,7 @@
 // Coleta em casa (seção 6.3 do CONTEXT.md).
 const express = require('express');
+const multer = require('multer');
+const config = require('../config');
 const { getDb, inserir } = require('../db');
 const { autenticar } = require('../middlewares/auth');
 const { exigirPerfil } = require('../middlewares/rbac');
@@ -8,7 +10,21 @@ const { transicionar } = require('../services/pedidoStatus');
 const qr = require('../services/qrcode');
 
 const router = express.Router();
-const MATERIAIS = ['plastico', 'metal', 'vidro', 'papel'];
+const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp'];
+
+// A foto dos materiais é obrigatória: o coletor vê o que vai buscar antes de aceitar.
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: config.uploadMaxBytes, files: 1 },
+  fileFilter: (req, file, cb) => (TIPOS_FOTO.includes(file.mimetype)
+    ? cb(null, true)
+    : cb(new ErroNegocio('TIPO_INVALIDO', 'Envie a foto em JPG, PNG ou WEBP.'))),
+});
+
+function lerMateriais(valor) {
+  if (typeof valor !== 'string') return valor;
+  try { return JSON.parse(valor); } catch { return null; }
+}
 
 function catadorAprovado(db, usuarioId) {
   const catador = db.catadores.find((c) => c.usuario_id === usuarioId);
@@ -23,9 +39,12 @@ function buscarPedido(db, id) {
   return pedido;
 }
 
-router.post('/', autenticar, exigirPerfil('morador'), (req, res) => {
+router.post('/', autenticar, exigirPerfil('morador'), upload.single('foto'), (req, res) => {
   const db = getDb();
-  const { materiais_estimados, endereco, bairro_id, janela_horario } = req.body || {};
+  const { endereco, bairro_id, janela_horario } = req.body || {};
+  const materiais_estimados = lerMateriais(req.body?.materiais_estimados);
+  const MATERIAIS = db.materiais.filter((m) => m.ativo).map((m) => m.nome);
+  if (!req.file) throw new ErroNegocio('FOTO_OBRIGATORIA', 'Envie uma foto dos materiais para o coletor saber o que vai buscar.');
   if (!Array.isArray(materiais_estimados) || materiais_estimados.length === 0 || !materiais_estimados.every((m) => MATERIAIS.includes(m.material) && Number(m.quantidade_kg) > 0)) {
     throw new ErroNegocio('MATERIAIS_INVALIDOS', 'Informe os materiais e a quantidade estimada.');
   }
@@ -36,8 +55,11 @@ router.post('/', autenticar, exigirPerfil('morador'), (req, res) => {
   const morador = db.moradores.find((m) => m.usuario_id === req.usuario.id);
   const pedido = inserir('pedidos', {
     morador_id: morador?.id ?? null, morador_usuario_id: req.usuario.id, catador_id: null, catador_usuario_id: null,
-    endereco, bairro_id: Number(bairro_id), janela_horario, materiais_estimados, status: 'aberto', criado_em: new Date().toISOString(),
+    endereco: String(endereco).slice(0, 200), bairro_id: Number(bairro_id), janela_horario: String(janela_horario).slice(0, 40),
+    materiais_estimados: materiais_estimados.map((m) => ({ material: m.material, quantidade_kg: Number(m.quantidade_kg) })),
+    status: 'aberto', tem_foto: true, criado_em: new Date().toISOString(),
   });
+  db.fotosPedidos[pedido.id] = { mime: req.file.mimetype, dados: req.file.buffer };
   // QR do pedido: o catador confirma a coleta lendo este código na casa do morador.
   const codigo = qr.gerarCodigo(db.qrcodes, { tipo: 'pedido', referenciaId: pedido.id, usuarioId: req.usuario.id, validadeMinutos: 7 * 24 * 60 });
   pedido.qr_code = codigo.codigo;
@@ -63,6 +85,23 @@ router.get('/minhas-coletas', autenticar, exigirPerfil('catador'), (req, res) =>
     .filter((p) => p.catador_usuario_id === req.usuario.id)
     .map(({ qr_code, ...resto }) => resto);
   res.json({ pedidos });
+});
+
+// Foto do pedido: o morador dono, o admin e coletores aprovados que atendem o bairro (ou que aceitaram o pedido).
+router.get('/:id/foto', autenticar, (req, res) => {
+  const db = getDb();
+  const pedido = buscarPedido(db, req.params.id);
+  const foto = db.fotosPedidos[pedido.id];
+  if (!foto) throw new ErroNegocio('NAO_ENCONTRADO', 'Pedido sem foto.', 404);
+  const { id, perfil } = req.usuario;
+  let pode = perfil === 'admin' || pedido.morador_usuario_id === id || pedido.catador_usuario_id === id;
+  if (!pode && perfil === 'catador' && pedido.status === 'aberto') {
+    const catador = db.catadores.find((c) => c.usuario_id === id);
+    pode = Boolean(catador?.aprovado) && (catador.bairros.length === 0 || catador.bairros.includes(pedido.bairro_id));
+  }
+  if (!pode) throw new ErroNegocio('SEM_PERMISSAO', 'Você não pode ver esta foto.', 403);
+  res.set({ 'Content-Type': foto.mime, 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline' });
+  res.send(foto.dados);
 });
 
 router.post('/:id/aceitar', autenticar, exigirPerfil('catador'), (req, res) => {

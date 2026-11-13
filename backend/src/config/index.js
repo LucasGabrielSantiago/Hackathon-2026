@@ -19,6 +19,8 @@ const config = {
   catadorCentavosPorKg: Number(process.env.CATADOR_CENTAVOS_POR_KG) || 80,
   qrValidadeMinutos: 30,
   uploadMaxBytes: 5 * 1024 * 1024,
+  // Mostra o link de recuperação de senha na resposta (sem e-mail no MVP). Nunca ligado em produção por padrão.
+  recuperacaoLinkDemo: process.env.RECUPERACAO_LINK_DEMO === 'true' || process.env.NODE_ENV !== 'production',
 };
 
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {

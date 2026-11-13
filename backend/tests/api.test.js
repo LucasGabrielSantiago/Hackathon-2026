@@ -23,6 +23,20 @@ async function api(caminho, { metodo = 'GET', corpo, token, headers = {} } = {})
   });
   return { status: resp.status, body: await resp.json() };
 }
+// PNG 1x1 válido, usado como foto dos materiais nos testes.
+const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
+
+async function criarPedido(token, { comFoto = true, bairro_id = 1, materiais = [{ material: 'metal', quantidade_kg: 1 }] } = {}) {
+  const fd = new FormData();
+  fd.append('materiais_estimados', JSON.stringify(materiais));
+  fd.append('endereco', 'Rua Y, 10');
+  fd.append('bairro_id', String(bairro_id));
+  fd.append('janela_horario', 'manhã');
+  if (comFoto) fd.append('foto', new Blob([PNG], { type: 'image/png' }), 'foto.png');
+  const resp = await fetch(`${base}/pedidos`, { method: 'POST', headers: { authorization: `Bearer ${token}` }, body: fd });
+  return { status: resp.status, body: await resp.json() };
+}
+
 const login = async (email) => (await api('/auth/login', { metodo: 'POST', corpo: { email, senha: 'demo1234' } })).body.token;
 
 test('cadastro e login de morador', async () => {
@@ -104,7 +118,8 @@ test('coleta em casa: catador e morador recebem valores separados', async () => 
   const ponto = await login('ponto@reciclape.demo');
   const saldoAntes = (await api('/carteira', { token: morador })).body.saldo_centavos;
 
-  const ped = await api('/pedidos', { metodo: 'POST', token: morador, corpo: { materiais_estimados: [{ material: 'metal', quantidade_kg: 1 }], endereco: 'Rua Y, 10', bairro_id: 1, janela_horario: 'manhã' } });
+  const ped = await criarPedido(morador);
+  assert.strictEqual(ped.status, 201);
   const id = ped.body.pedido.id;
   const proximos = await api('/pedidos/proximos', { token: catador });
   assert.strictEqual(proximos.body.pedidos.find((p) => p.id === id).endereco, undefined, 'endereço oculto antes de aceitar');
@@ -142,4 +157,65 @@ test('API envia cabeçalhos de segurança e esconde o framework', async () => {
 test('CORS: sem FRONTEND_URL configurado (desenvolvimento) aceita a origem', async () => {
   const resp = await fetch(`${base}/health`, { headers: { Origin: 'http://localhost:5173' } });
   assert.strictEqual(resp.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+});
+
+test('login com e-mail inexistente ou senha errada dá a mesma mensagem', async () => {
+  const semConta = await api('/auth/login', { metodo: 'POST', corpo: { email: 'ninguem@teste.com', senha: 'qualquer1' } });
+  const senhaErrada = await api('/auth/login', { metodo: 'POST', corpo: { email: 'morador@reciclape.demo', senha: 'errada123' } });
+  assert.strictEqual(semConta.status, 401);
+  assert.strictEqual(semConta.body.mensagem, 'E-mail ou senha inválidos.');
+  assert.strictEqual(senhaErrada.body.mensagem, semConta.body.mensagem);
+});
+
+test('esqueci minha senha: link de uso único troca a senha', async () => {
+  const inexistente = await api('/auth/esqueci-senha', { metodo: 'POST', corpo: { email: 'ninguem@teste.com' } });
+  const existente = await api('/auth/esqueci-senha', { metodo: 'POST', corpo: { email: 'maria@reciclape.demo' } });
+  assert.strictEqual(inexistente.status, 200);
+  assert.strictEqual(inexistente.body.mensagem, existente.body.mensagem, 'não revela se o e-mail existe');
+  assert.strictEqual(inexistente.body.link_demo, undefined);
+  const token = new URLSearchParams(existente.body.link_demo.split('?')[1]).get('token');
+  assert.ok(!getDb().recuperacoesSenha.some((r) => r.token_hash === token), 'guarda só o hash');
+  const curta = await api('/auth/redefinir-senha', { metodo: 'POST', corpo: { token, senha: '123' } });
+  assert.strictEqual(curta.status, 400);
+  const ok = await api('/auth/redefinir-senha', { metodo: 'POST', corpo: { token, senha: 'novaSenha123' } });
+  assert.strictEqual(ok.status, 200);
+  const deNovo = await api('/auth/redefinir-senha', { metodo: 'POST', corpo: { token, senha: 'outraSenha123' } });
+  assert.strictEqual(deNovo.status, 400, 'link é de uso único');
+  assert.strictEqual((await api('/auth/login', { metodo: 'POST', corpo: { email: 'maria@reciclape.demo', senha: 'novaSenha123' } })).status, 200);
+});
+
+test('pedido de coleta exige foto dos materiais', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const sem = await criarPedido(morador, { comFoto: false });
+  assert.strictEqual(sem.status, 400);
+  assert.strictEqual(sem.body.erro, 'FOTO_OBRIGATORIA');
+  const eletronico = await criarPedido(morador, { materiais: [{ material: 'eletronico', quantidade_kg: 2 }] });
+  assert.strictEqual(eletronico.status, 201, 'lixo eletrônico é aceito');
+  const invalido = await criarPedido(morador, { materiais: [{ material: 'radioativo', quantidade_kg: 1 }] });
+  assert.strictEqual(invalido.status, 400);
+});
+
+test('foto do pedido: só morador dono, admin e coletor que atende o bairro', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const ped = await criarPedido(morador, { bairro_id: 1 });
+  const id = ped.body.pedido.id;
+  const foto = async (email) => (await fetch(`${base}/pedidos/${id}/foto`, { headers: { authorization: `Bearer ${await login(email)}` } }));
+  const doMorador = await foto('morador@reciclape.demo');
+  assert.strictEqual(doMorador.status, 200);
+  assert.strictEqual(doMorador.headers.get('content-type'), 'image/png');
+  assert.strictEqual((await foto('catador@reciclape.demo')).status, 200, 'coletor de Boa Viagem vê');
+  assert.strictEqual((await foto('josefa@reciclape.demo')).status, 403, 'coletora de outro bairro não vê');
+  assert.strictEqual((await foto('rita@reciclape.demo')).status, 403, 'coletora pendente não vê');
+  assert.strictEqual((await foto('joao@reciclape.demo')).status, 403, 'outro morador não vê');
+  assert.strictEqual((await foto('admin@reciclape.demo')).status, 200);
+});
+
+test('dados de demonstração: pedidos aguardando retirada com foto e sem endereço exposto', async () => {
+  const catador = await login('catador@reciclape.demo');
+  const r = await api('/pedidos/proximos', { token: catador });
+  const demo = r.body.pedidos.filter((p) => p.demo);
+  assert.ok(demo.length >= 3, 'coletor de Boa Viagem e São José vê pedidos de demonstração');
+  assert.ok(demo.every((p) => p.tem_foto && p.endereco === undefined && p.qr_code === undefined));
+  const materiais = (await api('/materiais')).body.materiais.map((m) => m.nome);
+  assert.ok(materiais.includes('eletronico') && materiais.includes('outros'));
 });
