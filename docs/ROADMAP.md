@@ -13,7 +13,10 @@ Roadmap completo: [CONTEXT.md §18](../CONTEXT.md).
 - [x] Registro de pesagem com QR Code
 - [x] Cálculo demonstrativo de recompensas e carteira
 - [x] Painel administrativo (aprovações + Índice Canal Limpo)
-- [ ] Deploy público (Vercel + Render)
+- [x] Docker, Docker Compose e pipeline DevSecOps
+- [x] Configuração de deploy (Vercel + Render)
+- [ ] Deploy público no ar (links no README)
+- [ ] Design system conforme `docs/FRONTEND_DESIGN.md`
 
 ## Próximas fases
 
