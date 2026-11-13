@@ -25,6 +25,8 @@ services:
         sync: false # preencher no painel com a URL da Vercel
       - key: AI_API_KEY
         sync: false # opcional
+      - key: DATABASE_URL
+        sync: false # SEGREDO: connection string do Neon (PostgreSQL). Sem ela, dados só em memória
       - key: AI_MODEL
         value: claude-haiku-5-5
       - key: CATADOR_CENTAVOS_POR_KG
