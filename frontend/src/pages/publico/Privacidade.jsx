@@ -15,6 +15,7 @@ export default function Privacidade() {
         <li><b>Cadastro:</b> nome, e-mail, telefone (opcional), senha (guardada só como código criptografado), perfil, município e bairro.</li>
         <li><b>Coleta em casa:</b> endereço, horário escolhido, tipos e quantidade de materiais e a foto dos materiais.</li>
         <li><b>Coletores e pontos:</b> bairros atendidos, materiais aceitos e localização do ponto de coleta.</li>
+        <li><b>Localização do coletor:</b> só enquanto ele está a caminho de uma coleta que aceitou e só se ele ativar o compartilhamento.</li>
         <li><b>Uso do app:</b> entregas, pesagens, QR Codes e créditos (extrato).</li>
       </ul>
 
@@ -30,7 +31,9 @@ export default function Privacidade() {
       <h2>3. Com quem compartilhamos</h2>
       <ul>
         <li><b>Foto e materiais do pedido:</b> visíveis aos coletores aprovados que atendem o seu bairro.</li>
-        <li><b>Endereço:</b> só o coletor que aceitar o seu pedido vê.</li>
+        <li><b>Endereço e pino no mapa:</b> só o coletor que aceitar o seu pedido vê. Antes disso, os coletores veem apenas o bairro.</li>
+        <li><b>Posição do coletor:</b> só o morador daquele pedido vê, e o compartilhamento para assim que a coleta é confirmada.</li>
+        <li><b>Mapas e endereços:</b> para preencher o endereço e traçar rotas usamos ViaCEP (CEP), OpenStreetMap/Nominatim (localização), OSRM (rotas) e links do Google Maps para navegação.</li>
         <li><b>Prefeituras e empresas parceiras:</b> recebem apenas números agregados, nunca dados pessoais.</li>
         <li><b>Fornecedores de tecnologia</b> (hospedagem e, quando ativada, a IA de classificação de imagens) tratam os dados só para prestar o serviço.</li>
         <li>Não vendemos dados pessoais.</li>

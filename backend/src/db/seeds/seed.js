@@ -42,7 +42,7 @@ const usuarios = [
   { id: 1, nome: 'Admin Demo', email: 'admin@reciclape.demo', telefone: '', perfil: 'admin' },
   { id: 2, nome: 'Morador Demo', email: 'morador@reciclape.demo', telefone: '', perfil: 'morador' },
   { id: 3, nome: 'Ponto Demo', email: 'ponto@reciclape.demo', telefone: '', perfil: 'ponto' },
-  { id: 4, nome: 'Catador Demo', email: 'catador@reciclape.demo', telefone: '', perfil: 'catador' },
+  { id: 4, nome: 'Coletor Demo', email: 'catador@reciclape.demo', telefone: '', perfil: 'catador' },
   { id: 5, nome: 'Josefa (coletora demo)', email: 'josefa@reciclape.demo', telefone: '', perfil: 'catador' },
   { id: 6, nome: 'Severino (coletor demo)', email: 'severino@reciclape.demo', telefone: '', perfil: 'catador' },
   { id: 7, nome: 'Rita (coletora demo, aguardando aprovação)', email: 'rita@reciclape.demo', telefone: '', perfil: 'catador' },
@@ -70,12 +70,12 @@ const catadores = [
 
 // Pedidos de coleta em casa AGUARDANDO RETIRADA, cada um com a foto dos materiais (pasta fotos/).
 const pedidos = [
-  { morador_usuario_id: 8, bairro_id: 1, janela_horario: 'Manhã (8h–12h)', foto: 'plastico.jpg', materiais_estimados: [{ material: 'plastico', quantidade_kg: 3 }] },
-  { morador_usuario_id: 9, bairro_id: 3, janela_horario: 'Tarde (13h–17h)', foto: 'metal.jpg', materiais_estimados: [{ material: 'metal', quantidade_kg: 2 }] },
-  { morador_usuario_id: 10, bairro_id: 4, janela_horario: 'Manhã (8h–12h)', foto: 'papel.jpg', materiais_estimados: [{ material: 'papel', quantidade_kg: 5 }] },
-  { morador_usuario_id: 10, bairro_id: 4, janela_horario: 'Tarde (13h–17h)', foto: 'vidro.jpg', materiais_estimados: [{ material: 'vidro', quantidade_kg: 4 }] },
-  { morador_usuario_id: 11, bairro_id: 7, janela_horario: 'Noite (18h–20h)', foto: 'eletronico.jpg', materiais_estimados: [{ material: 'eletronico', quantidade_kg: 1.5 }] },
-  { morador_usuario_id: 8, bairro_id: 1, janela_horario: 'Tarde (13h–17h)', foto: 'misto.jpg', materiais_estimados: [{ material: 'plastico', quantidade_kg: 1 }, { material: 'metal', quantidade_kg: 1 }, { material: 'papel', quantidade_kg: 1 }] },
+  { morador_usuario_id: 8, bairro_id: 1, janela_horario: 'Manhã (8h–12h)', foto: 'plastico.jpg', latitude: -8.1171, longitude: -34.8985, materiais_estimados: [{ material: 'plastico', quantidade_kg: 3 }] },
+  { morador_usuario_id: 9, bairro_id: 3, janela_horario: 'Tarde (13h–17h)', foto: 'metal.jpg', latitude: -8.0735, longitude: -34.8805, materiais_estimados: [{ material: 'metal', quantidade_kg: 2 }] },
+  { morador_usuario_id: 10, bairro_id: 4, janela_horario: 'Manhã (8h–12h)', foto: 'papel.jpg', latitude: -8.0262, longitude: -34.915, materiais_estimados: [{ material: 'papel', quantidade_kg: 5 }] },
+  { morador_usuario_id: 10, bairro_id: 4, janela_horario: 'Tarde (13h–17h)', foto: 'vidro.jpg', latitude: -8.0291, longitude: -34.9196, materiais_estimados: [{ material: 'vidro', quantidade_kg: 4 }] },
+  { morador_usuario_id: 11, bairro_id: 7, janela_horario: 'Noite (18h–20h)', foto: 'eletronico.jpg', latitude: -8.051, longitude: -34.912, materiais_estimados: [{ material: 'eletronico', quantidade_kg: 1.5 }] },
+  { morador_usuario_id: 8, bairro_id: 1, janela_horario: 'Tarde (13h–17h)', foto: 'misto.jpg', latitude: -8.1232, longitude: -34.903, materiais_estimados: [{ material: 'plastico', quantidade_kg: 1 }, { material: 'metal', quantidade_kg: 1 }, { material: 'papel', quantidade_kg: 1 }] },
 ];
 
 module.exports = { municipios, bairros, materiais, pontos, usuarios, moradores, catadores, pedidos, SENHA_DEMO: 'demo1234' };

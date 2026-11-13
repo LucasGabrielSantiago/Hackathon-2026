@@ -4,6 +4,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
 import { NOMES_MATERIAIS } from '../../utils/formatar.js';
+import CampoEndereco, { ENDERECO_VAZIO } from '../../components/map/CampoEndereco.jsx';
+import { montarEndereco } from '../../services/mapas.js';
 
 const PERFIS = [['morador', 'Morador(a)'], ['catador', 'Coletor(a) de recicláveis'], ['ponto', 'Ponto de coleta ou cooperativa']];
 
@@ -13,6 +15,7 @@ export default function Cadastro() {
   const [municipios, setMunicipios] = useState([]);
   const [bairros, setBairros] = useState([]);
   const [dados, setDados] = useState({ nome: '', email: '', telefone: '', senha: '', perfil: 'morador', municipio_id: '', bairro_id: '', endereco: '', materiais: [], aceite: false });
+  const [endereco, setEndereco] = useState(ENDERECO_VAZIO);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
@@ -31,7 +34,8 @@ export default function Cadastro() {
     setEnviando(true);
     try {
       const bairroId = Number(dados.bairro_id) || null;
-      await cadastrar({ ...dados, bairro_id: bairroId, bairros: bairroId ? [bairroId] : [] });
+      const textoEndereco = dados.perfil === 'morador' && (endereco.logradouro || endereco.cep) ? montarEndereco(endereco) : '';
+      await cadastrar({ ...dados, endereco: textoEndereco, bairro_id: bairroId, bairros: bairroId ? [bairroId] : [] });
       navigate('/');
     } catch (err) { setErro(err.message); } finally { setEnviando(false); }
   }
@@ -59,7 +63,13 @@ export default function Cadastro() {
           </select></div>
       </div>
       {dados.perfil === 'morador' && (
-        <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="endereco">Endereço (opcional)</label><input className="rp-campo" id="endereco" autoComplete="street-address" value={dados.endereco} onChange={mudar('endereco')} /></div>
+        <>
+          <CampoEndereco
+            id="cadastro" comMapa={false} comBairro={false} obrigatorio={false} bairros={bairros} valor={endereco}
+            onChange={(e) => { setEndereco(e); if (e.bairro_id && e.bairro_id !== endereco.bairro_id) setDados((d) => ({ ...d, bairro_id: e.bairro_id })); }}
+          />
+          <span className="rp-ajuda">Opcional. Digite o CEP para preencher a rua.</span>
+        </>
       )}
       {dados.perfil === 'catador' && (
         <fieldset className="rp-card">

@@ -176,11 +176,13 @@ Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovad
 
 1. **Morador**: Classificar → "latinha de refrigerante" → Carteira → **Gerar QR Code** (copie o código).
 2. **Ponto**: Registrar pesagem → cole o código → Metal 2 kg → **Confirmar** → R$ 10,00 para o morador.
-3. **Morador**: Pedir coleta em casa → **foto dos materiais (obrigatória)** → quantidades → bairro Boa Viagem ou São José.
-4. **Coletor** (`catador@`): vê a foto antes de aceitar → Aceitar → digitar o código do QR que aparece na tela "Pedir coleta" do morador → Confirmar coleta.
-5. **Ponto**: Registrar pesagem → Coleta do coletor → número do pedido → morador e coletor recebem valores separados.
-6. **Esqueci minha senha** (local): no login → informe o e-mail → "Abrir link de demonstração" → nova senha. Em produção o link não aparece na tela (envio por e-mail fica para a Fase 2).
-7. **Admin**: Aprovações (coletora Rita e ponto do Severino) e Índice Canal Limpo filtrado por município e bairro.
+3. **Morador**: Pedir coleta em casa → **foto dos materiais (obrigatória)** → quantidades → **CEP** (ex.: 51020-000) preenche a rua → número → confira o pino no mapa.
+4. **Coletor** (`catador@`): vê a foto antes de aceitar → Aceitar → em **Coletas**, "Simular trajeto (demo)" ou "Compartilhar minha localização" (ou "Navegar com o Google Maps").
+5. **Morador**: em "Pedir coleta" aparece "Coletor aceitou sua coleta" e o mapa com o percurso, distância e tempo estimado, atualizado a cada 5 s.
+6. **Coletor**: digitar o código do QR que aparece na tela do morador → Confirmar coleta (o compartilhamento de localização para).
+7. **Ponto**: Registrar pesagem → Coleta do coletor → número do pedido → morador e coletor recebem valores separados.
+8. **Esqueci minha senha** (local): no login → informe o e-mail → "Abrir link de demonstração" → nova senha. Em produção o link não aparece na tela (envio por e-mail fica para a Fase 2).
+9. **Admin**: Aprovações (coletora Rita e ponto do Severino) e Índice Canal Limpo filtrado por município e bairro.
 
 ### Documentação
 
@@ -210,6 +212,15 @@ Dados de demonstração: 8 bairros (Recife e Olinda), 8 pontos de coleta aprovad
 | `VITE_API_URL` | front-end | URL da API (ex.: `https://<app>.onrender.com/api`) |
 
 ---
+
+## 🗺️ Endereços, mapas e acompanhamento da coleta
+
+- **Endereço por CEP** em todo o sistema (cadastro, pedido de coleta e ponto de coleta): o [ViaCEP](https://viacep.com.br) preenche rua, bairro e cidade; o número localiza o endereço no mapa ([Nominatim/OpenStreetMap](https://nominatim.org)); o pino pode ser ajustado com o dedo. Ninguém digita latitude e longitude.
+- **Coleta aceita:** o morador vê o nome de quem aceitou e o horário.
+- **Percurso:** o coletor compartilha a localização (ou usa "Simular trajeto" na demonstração) e o morador acompanha no mapa a rota ([OSRM](https://project-osrm.org)), a distância e o tempo estimado, atualizados a cada 5 s.
+- **Google Maps:** o botão "Navegar com o Google Maps" abre a rota no app do Google Maps pelos [Maps URLs](https://developers.google.com/maps/documentation/urls/get-started), sem chave de API.
+- **Privacidade:** antes do aceite o coletor vê só o bairro; a posição do coletor só aparece para o morador daquele pedido e para de ser enviada quando a coleta é confirmada.
+- **Limites do MVP:** Nominatim (1 consulta por segundo) e o servidor público do OSRM são para demonstração. Em produção: Google Maps Platform (Geocoding, Routes e Maps JavaScript, com chave restrita por domínio) ou servidores próprios.
 
 ## 💸 Bolsa Reciclagem
 

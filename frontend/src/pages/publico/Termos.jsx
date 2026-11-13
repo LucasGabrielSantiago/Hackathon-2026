@@ -23,7 +23,7 @@ export default function Termos() {
       <h2>3. Como funciona</h2>
       <ul>
         <li><b>Morador:</b> separa os recicláveis, entrega num ponto de coleta (com QR Code) ou pede a coleta em casa, enviando uma foto dos materiais.</li>
-        <li><b>Coletor de recicláveis:</b> vê os pedidos do seu bairro, aceita, confirma a coleta lendo o QR Code do morador e leva o material a um ponto autorizado.</li>
+        <li><b>Coletor de recicláveis:</b> vê os pedidos do seu bairro, aceita, pode compartilhar a localização para o morador acompanhar a chegada, confirma a coleta lendo o QR Code do morador e leva o material a um ponto autorizado.</li>
         <li><b>Ponto de coleta:</b> pesa o material e registra a entrega. O valor é calculado pela plataforma com base no peso e no tipo de material.</li>
       </ul>
 

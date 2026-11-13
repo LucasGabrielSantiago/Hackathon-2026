@@ -40,7 +40,8 @@ describe('Páginas públicas', () => {
     global.fetch = vi.fn((url) => ok(String(url).includes('bairros') ? { bairros: [{ id: 1, nome: 'Boa Viagem' }] } : { pedidos: [] }));
     render(<MemoryRouter><SolicitarColeta /></MemoryRouter>);
     await userEvent.type(screen.getByLabelText('Lixo eletrônico'), '2');
-    await userEvent.type(screen.getByLabelText('Endereço'), 'Rua A, 1');
+    await userEvent.type(screen.getByLabelText('Rua'), 'Rua A');
+    await userEvent.type(screen.getByLabelText('Número'), '1');
     await userEvent.selectOptions(await screen.findByLabelText('Bairro'), '1');
     await userEvent.click(screen.getByRole('button', { name: 'Solicitar coleta' }));
     expect(await screen.findByText(/Envie uma foto dos materiais/)).toBeInTheDocument();

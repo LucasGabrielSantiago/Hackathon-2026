@@ -117,3 +117,8 @@ fieldset.rp-card legend { padding: 0 4px; }
 .texto-legal h2 { font-family: var(--font-display); font-size: 18px; color: var(--verde-700); margin: var(--espaco-4) 0 0; }
 .texto-legal p, .texto-legal ul { margin: 0; }
 .texto-legal ul { padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+
+/* Mapas pequenos (endereço e percurso) */
+.mapa-pequeno { height: 240px; }
+.pino-mapa span { display: flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid #fff; box-shadow: 0 2px 6px rgba(0,0,0,.3); color: #fff; font: 700 14px/1 var(--font-texto); }
+.pino-mapa b { transform: rotate(45deg); }

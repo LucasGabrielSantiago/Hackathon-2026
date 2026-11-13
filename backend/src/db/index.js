@@ -44,6 +44,7 @@ function carregarPedidosDemo() {
       id: i + 1, morador_id: db.moradores.find((m) => m.usuario_id === p.morador_usuario_id)?.id ?? null,
       morador_usuario_id: p.morador_usuario_id, catador_id: null, catador_usuario_id: null,
       endereco: `Endereço demonstrativo, ${100 + i}`, bairro_id: p.bairro_id, janela_horario: p.janela_horario,
+      cep: '', latitude: p.latitude ?? null, longitude: p.longitude ?? null,
       materiais_estimados: p.materiais_estimados, status: 'aberto', tem_foto: true, demo: true,
       criado_em: new Date(Date.now() - (i + 1) * 3600000).toISOString(),
     };

@@ -26,8 +26,9 @@ async function api(caminho, { metodo = 'GET', corpo, token, headers = {} } = {})
 // PNG 1x1 válido, usado como foto dos materiais nos testes.
 const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==', 'base64');
 
-async function criarPedido(token, { comFoto = true, bairro_id = 1, materiais = [{ material: 'metal', quantidade_kg: 1 }] } = {}) {
+async function criarPedido(token, { comFoto = true, bairro_id = 1, materiais = [{ material: 'metal', quantidade_kg: 1 }], destino = null } = {}) {
   const fd = new FormData();
+  if (destino) { fd.append('latitude', String(destino[0])); fd.append('longitude', String(destino[1])); fd.append('cep', '51020-000'); }
   fd.append('materiais_estimados', JSON.stringify(materiais));
   fd.append('endereco', 'Rua Y, 10');
   fd.append('bairro_id', String(bairro_id));
@@ -218,4 +219,44 @@ test('dados de demonstração: pedidos aguardando retirada com foto e sem endere
   assert.ok(demo.every((p) => p.tem_foto && p.endereco === undefined && p.qr_code === undefined));
   const materiais = (await api('/materiais')).body.materiais.map((m) => m.nome);
   assert.ok(materiais.includes('eletronico') && materiais.includes('outros'));
+});
+
+test('acompanhamento: morador vê quem aceitou e a posição do coletor só a caminho', async () => {
+  const morador = await login('morador@reciclape.demo');
+  const coletor = await login('catador@reciclape.demo');
+  const outro = await login('severino@reciclape.demo');
+  const ped = await criarPedido(morador, { bairro_id: 1, destino: [-8.1196, -34.9012] });
+  const id = ped.body.pedido.id;
+  assert.strictEqual(ped.body.pedido.cep, '51020000');
+
+  const antes = (await api('/pedidos/proximos', { token: coletor })).body.pedidos.find((p) => p.id === id);
+  assert.strictEqual(antes.latitude, undefined, 'coordenada exata escondida antes do aceite');
+
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: coletor, corpo: { latitude: -8.1, longitude: -34.9 } })).status, 403, 'só depois de aceitar');
+  await api(`/pedidos/${id}/aceitar`, { metodo: 'POST', token: coletor });
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: outro, corpo: { latitude: -8.1, longitude: -34.9 } })).status, 403, 'outro coletor não envia');
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: coletor, corpo: { latitude: 200, longitude: 0 } })).status, 400);
+  assert.strictEqual((await api(`/pedidos/${id}/localizacao`, { metodo: 'POST', token: coletor, corpo: { latitude: -8.1, longitude: -34.9 } })).status, 200);
+
+  const acomp = await api(`/pedidos/${id}/acompanhamento`, { token: morador });
+  assert.strictEqual(acomp.status, 200);
+  assert.strictEqual(acomp.body.status, 'aceito');
+  assert.strictEqual(acomp.body.coletor_nome, 'Coletor');
+  assert.deepStrictEqual(acomp.body.destino, { latitude: -8.1196, longitude: -34.9012 });
+  assert.strictEqual(acomp.body.coletor_posicao.latitude, -8.1);
+  assert.strictEqual((await api(`/pedidos/${id}/acompanhamento`, { token: await login('joao@reciclape.demo') })).status, 403, 'outro morador não acompanha');
+  const meus = (await api('/pedidos/meus', { token: morador })).body.pedidos.find((p) => p.id === id);
+  assert.strictEqual(meus.coletor_nome, 'Coletor');
+
+  await api(`/pedidos/${id}/coletar`, { metodo: 'POST', token: coletor, corpo: { codigo: ped.body.pedido.qr_code } });
+  assert.strictEqual((await api(`/pedidos/${id}/acompanhamento`, { token: morador })).body.coletor_posicao, null, 'para de compartilhar após a coleta');
+});
+
+test('ponto aceita lixo eletrônico e exige localização', async () => {
+  const coletor = await login('catador@reciclape.demo');
+  const base = { nome: 'Ecoponto Teste', endereco: 'Rua A, 1', bairro_id: 1, materiais_aceitos: ['eletronico'], modalidade: 'doacao' };
+  assert.strictEqual((await api('/pontos', { metodo: 'POST', token: coletor, corpo: base })).body.erro, 'LOCALIZACAO_INVALIDA');
+  const ok = await api('/pontos', { metodo: 'POST', token: coletor, corpo: { ...base, latitude: -8.12, longitude: -34.9, cep: '51020-000' } });
+  assert.strictEqual(ok.status, 201);
+  assert.strictEqual(ok.body.ponto.cep, '51020000');
 });

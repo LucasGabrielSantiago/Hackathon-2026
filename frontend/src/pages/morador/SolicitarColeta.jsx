@@ -6,6 +6,9 @@ import Icon from '../../components/common/Icon.jsx';
 import { StatusPedido } from '../../components/common/Badge.jsx';
 import RecyclingProgress from '../../components/recycling/RecyclingProgress.jsx';
 import FotoPedido from '../../components/pedido/FotoPedido.jsx';
+import AcompanharColeta from '../../components/pedido/AcompanharColeta.jsx';
+import CampoEndereco, { ENDERECO_VAZIO } from '../../components/map/CampoEndereco.jsx';
+import { montarEndereco } from '../../services/mapas.js';
 import { NOMES_MATERIAIS } from '../../utils/formatar.js';
 
 const JANELAS = ['Manhã (8h–12h)', 'Tarde (13h–17h)', 'Noite (18h–20h)'];
@@ -15,7 +18,8 @@ const MAX_BYTES = 5 * 1024 * 1024;
 export default function SolicitarColeta() {
   const [bairros, setBairros] = useState([]);
   const [pedidos, setPedidos] = useState([]);
-  const [form, setForm] = useState({ endereco: '', bairro_id: '', janela_horario: JANELAS[0] });
+  const [form, setForm] = useState({ janela_horario: JANELAS[0] });
+  const [endereco, setEndereco] = useState(ENDERECO_VAZIO);
   const [qtd, setQtd] = useState(QTD_VAZIA);
   const [foto, setFoto] = useState(null);
   const [temPrevia, setTemPrevia] = useState(false);
@@ -56,11 +60,15 @@ export default function SolicitarColeta() {
       .map(([material, v]) => ({ material, quantidade_kg: Number(String(v).replace(',', '.')) }));
     if (!foto) { setErro('Envie uma foto dos materiais para o coletor saber o que vai buscar.'); return; }
     if (materiais_estimados.length === 0) { setErro('Informe a quantidade de pelo menos um material.'); return; }
+    if (endereco.latitude == null) { setErro('Localize o endereço no mapa para o coletor encontrar sua casa.'); return; }
     const fd = new FormData();
     fd.append('foto', foto);
     fd.append('materiais_estimados', JSON.stringify(materiais_estimados));
-    fd.append('endereco', form.endereco);
-    fd.append('bairro_id', form.bairro_id);
+    fd.append('endereco', montarEndereco(endereco));
+    fd.append('bairro_id', endereco.bairro_id);
+    fd.append('cep', endereco.cep);
+    fd.append('latitude', String(endereco.latitude));
+    fd.append('longitude', String(endereco.longitude));
     fd.append('janela_horario', form.janela_horario);
     setEnviando(true);
     try {
@@ -81,6 +89,7 @@ export default function SolicitarColeta() {
         <div key={p.id} className="rp-card">
           <div className="entre"><p className="rp-card-titulo">Pedido #{p.id}</p><StatusPedido status={p.status} /></div>
           <RecyclingProgress status={p.status} />
+          {p.status === 'aceito' && <AcompanharColeta pedidoId={p.id} />}
           {p.tem_foto && <FotoPedido pedidoId={p.id} />}
           <p className="rp-card-texto">{p.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material] || m.material} ${m.quantidade_kg} kg`).join(' · ')} · {p.janela_horario}</p>
           {p.qr_code && (
@@ -116,17 +125,8 @@ export default function SolicitarColeta() {
           ))}
           <span className="rp-ajuda">Lixo eletrônico: celulares, cabos, carregadores, pilhas e aparelhos pequenos.</span>
         </fieldset>
-        <div className="rp-campo-grupo">
-          <label className="rp-rotulo" htmlFor="endereco">Endereço</label>
-          <input className="rp-campo" id="endereco" autoComplete="street-address" value={form.endereco} onChange={(e) => setForm({ ...form, endereco: e.target.value })} required />
-          <span className="rp-ajuda">Só o coletor que aceitar o pedido vê o endereço.</span>
-        </div>
-        <div className="rp-campo-grupo">
-          <label className="rp-rotulo" htmlFor="bairro">Bairro</label>
-          <select className="rp-campo" id="bairro" value={form.bairro_id} onChange={(e) => setForm({ ...form, bairro_id: e.target.value })} required>
-            <option value="">Selecione</option>{bairros.map((b) => <option key={b.id} value={b.id}>{b.nome}</option>)}
-          </select>
-        </div>
+        <CampoEndereco valor={endereco} onChange={setEndereco} bairros={bairros} id="coleta" />
+        <span className="rp-ajuda">Só o coletor que aceitar o pedido vê o endereço e o pino exato.</span>
         <fieldset className="rp-campo-grupo" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className="rp-rotulo">Horário</legend>
           <div className="rp-chips">{JANELAS.map((j) => (
