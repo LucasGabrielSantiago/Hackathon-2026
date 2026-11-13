@@ -59,3 +59,26 @@ describe('Coletor aguardando aprovação', () => {
     expect(screen.queryByText('Nenhum pedido aberto agora')).not.toBeInTheDocument();
   });
 });
+
+describe('Ponto recebe pedido de coleta', () => {
+  it('trazido pelo morador pede o QR do pedido e envia número + código', async () => {
+    const { default: RegistrarPesagem } = await import('../pages/ponto/RegistrarPesagem.jsx');
+    const chamadas = [];
+    global.fetch = vi.fn((url, op = {}) => {
+      chamadas.push([String(url), op]);
+      if (String(url).includes('/resumo')) return Promise.resolve({ ok: true, json: async () => ({ id: 7, status: 'aberto', bairro: 'Boa Viagem', materiais_estimados: [{ material: 'plastico', quantidade_kg: 2 }], quem_traz: 'morador' }) });
+      return Promise.resolve({ ok: true, json: async () => ({ entrega: { id: 1, pedido_id: 7, entregue_por: 'morador', peso_total_gramas: 2000, recompensa_centavos: 300 } }) });
+    });
+    render(<MemoryRouter><RegistrarPesagem /></MemoryRouter>);
+    await userEvent.click(screen.getByRole('tab', { name: 'Pedido de coleta' }));
+    await userEvent.type(screen.getByLabelText('Número do pedido'), '7');
+    await userEvent.tab();
+    expect(await screen.findByText('Trazido pelo próprio morador')).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Código do QR do pedido'), 'abc-123');
+    await userEvent.type(screen.getByLabelText('Peso em kg'), '2');
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmar entrega' }));
+    expect(await screen.findByText(/trazido pelo próprio morador/)).toBeInTheDocument();
+    const post = chamadas.find(([u, op]) => u.endsWith('/entregas') && op.method === 'POST');
+    expect(JSON.parse(post[1].body)).toMatchObject({ pedido_id: 7, codigo: 'abc-123' });
+  });
+});

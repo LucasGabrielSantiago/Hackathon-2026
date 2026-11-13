@@ -50,7 +50,7 @@ export default function MinhasColetas() {
                   <button className="rp-btn rp-btn-fantasma rp-btn-bloco" type="button" onClick={() => acao(`/pedidos/${p.id}/recusar`, null, 'Pedido devolvido para outros catadores.')}>Desistir</button>
                 </>
               )}
-              {p.status === 'coletado' && <Alert tipo="info" titulo="Próximo passo">Informe o pedido #{p.id} no ponto de coleta para a pesagem.</Alert>}
+              {p.status === 'coletado' && <Alert tipo="info" titulo="Próximo passo">Leve o material a um ponto de coleta e informe o <b>pedido #{p.id}</b> para a pesagem. Você recebe a sua remuneração ao confirmar.</Alert>}
             </div>
           ))}
         </div>
