@@ -2,13 +2,15 @@
 // Sem AI_API_KEY (ou se a IA falhar), usa o classificador de reserva por palavras-chave.
 const config = require('../config');
 
-const MATERIAIS = ['plastico', 'metal', 'vidro', 'papel'];
+const MATERIAIS = ['eletronico', 'outros', 'plastico', 'metal', 'vidro', 'papel'];
 
 const ORIENTACOES = {
   plastico: ['Retire o líquido restante', 'Enxágue a embalagem', 'Amasse para ocupar menos espaço'],
   metal: ['Esvazie e enxágue a lata', 'Amasse a lata', 'Cuidado com bordas cortantes'],
   vidro: ['Esvazie e enxágue', 'Não misture com vidro quebrado solto: embale em papel', 'Retire tampas de metal ou plástico'],
   papel: ['Mantenha seco e limpo', 'Desmonte as caixas', 'Papel engordurado ou molhado não é reciclável'],
+  eletronico: ['Nunca jogue no lixo comum: tem metais pesados', 'Apague seus dados e retire o chip e o cartão de memória', 'Entregue num ecoponto de eletrônicos ou peça a coleta'],
+  outros: ['Lave e seque antes de separar', 'Embalagem longa vida: enxágue e achate', 'Confira se o ponto de coleta aceita este item'],
 };
 
 const PALAVRAS = {
@@ -16,6 +18,8 @@ const PALAVRAS = {
   metal: ['lata', 'latinha', 'alumínio', 'aluminio', 'metal', 'tampa de metal', 'aço'],
   vidro: ['vidro', 'garrafa de vidro', 'pote de vidro', 'frasco'],
   papel: ['papel', 'papelão', 'papelao', 'caixa', 'jornal', 'revista', 'caderno'],
+  eletronico: ['celular', 'telefone', 'carregador', 'cabo', 'fone', 'computador', 'notebook', 'teclado', 'mouse', 'controle remoto', 'eletrônico', 'eletronico', 'placa', 'tablet', 'impressora', 'pilha', 'bateria'],
+  outros: ['longa vida', 'tetra pak', 'caixa de leite', 'isopor limpo', 'tampinha'],
 };
 
 const NAO_RECICLAVEIS = ['pizza', 'engordurad', 'guardanapo', 'papel higiênico', 'papel higienico', 'fralda', 'isopor sujo', 'espelho', 'cerâmica', 'ceramica'];
@@ -43,8 +47,8 @@ function classificarPorTexto(texto = '') {
 
 const PROMPT = `Você classifica resíduos para um app de reciclagem em Pernambuco.
 Responda SOMENTE com JSON válido, sem texto extra, no formato:
-{"material":"plastico|metal|vidro|papel|nenhum","categoria":"string curta","reciclavel":true,"confianca":0.0,"orientacoes":["até 3 frases curtas"],"observacao":"string curta"}
-Use linguagem simples. Se não tiver certeza, use confianca baixa. Lembre que nem todo objeto desses materiais é reciclável (ex.: papel engordurado).`;
+{"material":"plastico|metal|vidro|papel|eletronico|outros|nenhum","categoria":"string curta","reciclavel":true,"confianca":0.0,"orientacoes":["até 3 frases curtas"],"observacao":"string curta"}
+Use linguagem simples. Se não tiver certeza, use confianca baixa. Lembre que nem todo objeto desses materiais é reciclável (ex.: papel engordurado). Use "eletronico" para celulares, cabos, carregadores, pilhas e aparelhos; "outros" para recicláveis que não se encaixam (ex.: embalagem longa vida).`;
 
 function normalizar(bruto) {
   const material = MATERIAIS.includes(bruto?.material) ? bruto.material : null;

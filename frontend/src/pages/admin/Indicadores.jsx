@@ -62,9 +62,9 @@ export default function Indicadores() {
             <StatCard rotulo="Kg recuperados" valor={dados.ambientais.kg_recuperados.toLocaleString('pt-BR')} />
             <StatCard rotulo="Entregas" valor={dados.ambientais.entregas} />
             <StatCard rotulo="Pontos ativos" valor={dados.ambientais.pontos_ativos} />
-            <StatCard rotulo="Catadores ativos" valor={dados.sociais.catadores_ativos} />
+            <StatCard rotulo="Coletores ativos" valor={dados.sociais.catadores_ativos} />
             <StatCard rotulo="Bolsa Reciclagem" valor={reais(dados.economicos.creditos_distribuidos_centavos)} />
-            <StatCard rotulo="Renda a catadores" valor={reais(dados.sociais.remuneracao_catadores_centavos)} />
+            <StatCard rotulo="Renda a coletores" valor={reais(dados.sociais.remuneracao_catadores_centavos)} />
           </div>
           <div className="grade-responsiva">
             <Barras titulo="Kg por material" rotulo="Material" dados={dados.ambientais.kg_por_material} />

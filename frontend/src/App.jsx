@@ -6,6 +6,10 @@ import { useAuth } from './context/AuthContext.jsx';
 import Home from './pages/publico/Home.jsx';
 import Login from './pages/publico/Login.jsx';
 import Cadastro from './pages/publico/Cadastro.jsx';
+import EsqueciSenha from './pages/publico/EsqueciSenha.jsx';
+import RedefinirSenha from './pages/publico/RedefinirSenha.jsx';
+import Termos from './pages/publico/Termos.jsx';
+import Privacidade from './pages/publico/Privacidade.jsx';
 import DashboardMorador from './pages/morador/Dashboard.jsx';
 import Classificar from './pages/morador/Classificar.jsx';
 import Mapa from './pages/morador/Mapa.jsx';
@@ -37,6 +41,10 @@ export default function App() {
         <Route path="/" element={<Inicio />} />
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
+        <Route path="/esqueci-senha" element={<EsqueciSenha />} />
+        <Route path="/redefinir-senha" element={<RedefinirSenha />} />
+        <Route path="/termos" element={<Termos />} />
+        <Route path="/privacidade" element={<Privacidade />} />
 
         <Route path="/morador" element={p(['morador'], <DashboardMorador />)} />
         <Route path="/morador/classificar" element={p(['morador'], <Classificar />)} />

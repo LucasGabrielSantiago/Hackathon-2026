@@ -4,8 +4,10 @@ import { useAuth } from '../../context/AuthContext.jsx';
 import { api } from '../../services/api.js';
 import Alert from '../../components/common/Alert.jsx';
 import { NOMES_MATERIAIS } from '../../utils/formatar.js';
+import CampoEndereco, { ENDERECO_VAZIO } from '../../components/map/CampoEndereco.jsx';
+import { montarEndereco } from '../../services/mapas.js';
 
-const PERFIS = [['morador', 'Morador(a)'], ['catador', 'Catador(a)'], ['ponto', 'Ponto de coleta ou cooperativa']];
+const PERFIS = [['morador', 'Morador(a)'], ['catador', 'Coletor(a) de recicláveis'], ['ponto', 'Ponto de coleta ou cooperativa']];
 
 export default function Cadastro() {
   const { cadastrar } = useAuth();
@@ -13,6 +15,7 @@ export default function Cadastro() {
   const [municipios, setMunicipios] = useState([]);
   const [bairros, setBairros] = useState([]);
   const [dados, setDados] = useState({ nome: '', email: '', telefone: '', senha: '', perfil: 'morador', municipio_id: '', bairro_id: '', endereco: '', materiais: [], aceite: false });
+  const [endereco, setEndereco] = useState(ENDERECO_VAZIO);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
 
@@ -31,7 +34,8 @@ export default function Cadastro() {
     setEnviando(true);
     try {
       const bairroId = Number(dados.bairro_id) || null;
-      await cadastrar({ ...dados, bairro_id: bairroId, bairros: bairroId ? [bairroId] : [] });
+      const textoEndereco = dados.perfil === 'morador' && (endereco.logradouro || endereco.cep) ? montarEndereco(endereco) : '';
+      await cadastrar({ ...dados, endereco: textoEndereco, bairro_id: bairroId, bairros: bairroId ? [bairroId] : [] });
       navigate('/');
     } catch (err) { setErro(err.message); } finally { setEnviando(false); }
   }
@@ -59,7 +63,13 @@ export default function Cadastro() {
           </select></div>
       </div>
       {dados.perfil === 'morador' && (
-        <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="endereco">Endereço (opcional)</label><input className="rp-campo" id="endereco" autoComplete="street-address" value={dados.endereco} onChange={mudar('endereco')} /></div>
+        <>
+          <CampoEndereco
+            id="cadastro" comMapa={false} comBairro={false} obrigatorio={false} bairros={bairros} valor={endereco}
+            onChange={(e) => { setEndereco(e); if (e.bairro_id && e.bairro_id !== endereco.bairro_id) setDados((d) => ({ ...d, bairro_id: e.bairro_id })); }}
+          />
+          <span className="rp-ajuda">Opcional. Digite o CEP para preencher a rua.</span>
+        </>
       )}
       {dados.perfil === 'catador' && (
         <fieldset className="rp-card">
@@ -70,10 +80,12 @@ export default function Cadastro() {
         </fieldset>
       )}
       <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="senha">Senha</label><input className="rp-campo" id="senha" type="password" minLength={8} autoComplete="new-password" value={dados.senha} onChange={mudar('senha')} required /><span className="rp-ajuda">Mínimo de 8 caracteres.</span></div>
-      <label className="rp-opcao"><input type="checkbox" checked={dados.aceite} onChange={mudar('aceite')} /> Li e aceito os termos de uso e a política de privacidade</label>
+      <label className="rp-opcao"><input type="checkbox" checked={dados.aceite} onChange={mudar('aceite')} />
+        <span>Li e aceito os <Link to="/termos" target="_blank" rel="noopener noreferrer">termos de uso</Link> e a <Link to="/privacidade" target="_blank" rel="noopener noreferrer">política de privacidade</Link></span>
+      </label>
       {erro && <Alert tipo="erro" titulo="Não foi possível criar a conta">{erro}</Alert>}
       <button className="rp-btn rp-btn-primario rp-btn-bloco" type="submit" disabled={enviando}>{enviando ? 'Criando…' : 'Criar conta'}</button>
-      {dados.perfil !== 'morador' && <p className="apoio centro">Catadores e pontos passam por aprovação antes de receber pedidos.</p>}
+      {dados.perfil !== 'morador' && <p className="apoio centro">Coletores e pontos passam por aprovação antes de receber pedidos.</p>}
       <p className="apoio centro">Já tem conta? <Link to="/login">Entrar</Link></p>
     </form>
   );

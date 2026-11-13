@@ -1,6 +1,6 @@
 import { NOMES_MATERIAIS, reais } from '../../utils/formatar.js';
 
-const SIGLA = { metal: 'Al', plastico: 'PET', papel: 'Pa', vidro: 'Vi' };
+const SIGLA = { metal: 'Al', plastico: 'PET', papel: 'Pa', vidro: 'Vi', eletronico: 'E', outros: '+' };
 
 export default function MaterialCard({ material }) {
   return (
