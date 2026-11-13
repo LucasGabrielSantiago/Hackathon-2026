@@ -41,3 +41,31 @@ describe('Endereço', () => {
     expect(formatarDistancia(5800)).toBe('5,8 km');
   });
 });
+
+describe('Localização com tentativas', () => {
+  it('sem achar o número, usa a rua e avisa que é aproximado', async () => {
+    const { geocodificar } = await import('../services/mapas.js');
+    const urls = [];
+    global.fetch = vi.fn((url) => { urls.push(String(url)); return Promise.resolve({ json: async () => (urls.length === 1 ? [] : [{ lat: '-8.04', lon: '-34.90' }]) }); });
+    const r = await geocodificar({ logradouro: 'Rua Carneiro Vilela', numero: '123', cidade: 'Recife', uf: 'PE', cep: '52050-030' }, { intervaloMs: 0 });
+    expect(r).toEqual({ latitude: -8.04, longitude: -34.9, aproximado: true });
+    expect(urls[0]).toContain('street=123+Rua+Carneiro+Vilela');
+    expect(urls[1]).toContain('street=Rua+Carneiro+Vilela');
+  });
+
+  it('cai para o CEP e depois para o bairro', async () => {
+    const { geocodificar } = await import('../services/mapas.js');
+    const urls = [];
+    global.fetch = vi.fn((url) => { urls.push(String(url)); return Promise.resolve({ json: async () => (urls.length < 4 ? [] : [{ lat: '-8.03', lon: '-34.89' }]) }); });
+    const r = await geocodificar({ logradouro: 'Rua X', numero: '1', bairro: 'Aflitos', cidade: 'Recife', uf: 'PE', cep: '52050030' }, { intervaloMs: 0 });
+    expect(r.aproximado).toBe(true);
+    expect(urls[2]).toContain('postalcode=52050-030');
+    expect(urls[3]).toContain('q=Aflitos%2C+Recife%2C+PE');
+  });
+
+  it('nada encontrado pede para marcar no mapa', async () => {
+    const { geocodificar } = await import('../services/mapas.js');
+    global.fetch = vi.fn(() => Promise.resolve({ json: async () => [] }));
+    await expect(geocodificar({ logradouro: 'Rua X', cidade: 'Recife' }, { intervaloMs: 0 })).rejects.toThrow('Toque no mapa');
+  });
+});

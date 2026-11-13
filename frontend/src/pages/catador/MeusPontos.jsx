@@ -46,7 +46,7 @@ export default function MeusPontos() {
       <h2 className="secao">Cadastrar novo ponto</h2>
       <form className="pilha" onSubmit={enviar}>
         <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="nome">Nome do ponto</label><input className="rp-campo" id="nome" value={form.nome} onChange={mudar('nome')} required /></div>
-        <CampoEndereco valor={endereco} onChange={setEndereco} bairros={bairros} id="ponto" />
+        <CampoEndereco valor={endereco} onChange={(e) => { setEndereco(e); setErro(''); }} bairros={bairros} id="ponto" />
         <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="horario">Horário de funcionamento</label><input className="rp-campo" id="horario" value={form.horario} onChange={mudar('horario')} placeholder="Seg a Sex, 8h–17h" /></div>
         <fieldset className="rp-card">
           <legend className="rp-rotulo">Materiais aceitos</legend>

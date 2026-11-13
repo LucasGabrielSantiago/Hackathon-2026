@@ -127,7 +127,7 @@ export default function SolicitarColeta() {
           ))}
           <span className="rp-ajuda">Lixo eletrônico: celulares, cabos, carregadores, pilhas e aparelhos pequenos.</span>
         </fieldset>
-        <CampoEndereco valor={endereco} onChange={setEndereco} bairros={bairros} id="coleta" />
+        <CampoEndereco valor={endereco} onChange={(e) => { setEndereco(e); setErro(''); }} bairros={bairros} id="coleta" />
         <span className="rp-ajuda">Só o coletor que aceitar o pedido vê o endereço e o pino exato.</span>
         <fieldset className="rp-campo-grupo" style={{ border: 0, padding: 0, margin: 0 }}>
           <legend className="rp-rotulo">Horário</legend>

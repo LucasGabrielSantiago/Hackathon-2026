@@ -48,3 +48,14 @@ describe('Páginas públicas', () => {
     expect(global.fetch).not.toHaveBeenCalledWith(expect.stringContaining('/pedidos'), expect.objectContaining({ method: 'POST' }));
   });
 });
+
+describe('Coletor aguardando aprovação', () => {
+  it('mostra "Cadastro em análise" sem erro vermelho nem lista vazia', async () => {
+    const { default: PedidosProximos } = await import('../pages/catador/PedidosProximos.jsx');
+    global.fetch = vi.fn(() => Promise.resolve({ ok: false, status: 403, json: async () => ({ erro: 'CATADOR_PENDENTE', mensagem: 'Seu cadastro ainda está em análise.' }) }));
+    render(<MemoryRouter><PedidosProximos /></MemoryRouter>);
+    expect(await screen.findByText('Cadastro em análise')).toBeInTheDocument();
+    expect(screen.queryByText('Algo deu errado')).not.toBeInTheDocument();
+    expect(screen.queryByText('Nenhum pedido aberto agora')).not.toBeInTheDocument();
+  });
+});
