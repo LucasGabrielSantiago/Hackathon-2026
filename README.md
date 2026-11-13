@@ -6,8 +6,8 @@
 > Solução do desafio **Antena na Lama** — Hackathon APONTI Academy: Devs Criam com IA (REC'n'Play 2026)
 > **Equipe 2** · Caminho escolhido: **Prevenir e cuidar**
 
-🔗 **App (Vercel):** `<inserir-link-após-deploy>`
-🔗 **API (Render):** `<inserir-link-após-deploy>/api/health`
+🔗 **App (Vercel):** https://hackathon-2026-theta-eight.vercel.app
+🔗 **API (Render):** https://recicla-pe-api.onrender.com/api/health
 🚀 Como publicar: [docs/DEPLOY.md](./docs/DEPLOY.md)
 🎥 **Demo / Pitch:** `<inserir-link>`
 

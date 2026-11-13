@@ -15,7 +15,7 @@ A ordem importa: **primeiro a API** (para ter a URL), **depois o front**, e por 
 2. **New → Blueprint** → escolha o repositório `Hackathon-2026` → **Apply**.
    O Render lê o `render.yaml` e cria o serviço `recicla-pe-api` (Node 22, pasta `backend`, health check em `/api/health`).
    O `JWT_SECRET` é gerado automaticamente.
-3. Quando o deploy terminar, copie a URL, por exemplo `https://recicla-pe-api.onrender.com`.
+3. Quando o deploy terminar, copie a URL. A nossa é `https://recicla-pe-api.onrender.com`.
 4. Teste: `https://recicla-pe-api.onrender.com/api/health` → `{"status":"ok","app":"Recicla PE"}`.
 
 > Plano free: o serviço **dorme depois de ~15 min sem acesso** e a primeira requisição demora ~1 min. Como os dados do MVP ficam em memória, **ao dormir/reiniciar tudo volta aos dados de demonstração**. Para evitar, configure o monitor do passo 4.
@@ -27,8 +27,9 @@ A ordem importa: **primeiro a API** (para ter a URL), **depois o front**, e por 
 3. Configure:
    - **Root Directory:** `frontend`
    - **Framework Preset:** Vite (detectado pelo `vercel.json`)
-   - **Environment Variables:** `VITE_API_URL` = `https://recicla-pe-api.onrender.com/api` (a URL do passo 1 + `/api`)
-4. **Deploy**. Copie a URL, por exemplo `https://recicla-pe.vercel.app`.
+   - **Environment Variables:** `VITE_API_URL` = `https://recicla-pe-api.onrender.com/api` (a URL do passo 1 + `/api`), tipo **Config** (não Secret: variáveis `VITE_` são públicas)
+   - Mesmo sem essa variável, o build usa `frontend/.env.production`, que já aponta para a API de produção
+4. **Deploy**. Copie a URL. A nossa é `https://hackathon-2026-theta-eight.vercel.app`.
 5. Em **Settings → Git**, confirme que a **Production Branch** é `main`.
 
 > `VITE_API_URL` é embutida no build. Se a URL da API mudar, altere a variável e faça **Redeploy**.
@@ -38,7 +39,7 @@ A ordem importa: **primeiro a API** (para ter a URL), **depois o front**, e por 
 No Render → `recicla-pe-api` → **Environment** → `FRONTEND_URL`:
 
 ```
-https://recicla-pe.vercel.app
+https://hackathon-2026-theta-eight.vercel.app,http://localhost:5173
 ```
 
 Para aceitar mais de uma origem, separe por vírgula (ex.: incluir `http://localhost:5173`). Salve: o Render reinicia a API.
@@ -84,6 +85,8 @@ Pull Requests para `develop` geram **Preview Deployments** na Vercel (URL tempor
 | Sintoma | Causa provável | Solução |
 |---|---|---|
 | "Failed to fetch" / erro de rede no login | CORS ou `VITE_API_URL` errada | Conferir `FRONTEND_URL` no Render e `VITE_API_URL` na Vercel (com `/api` no final) e redeploy |
+| App chama `localhost:3001` em produção | Build feito antes da variável existir, ou aba antiga aberta | Redeploy na Vercel e recarregar com Ctrl+Shift+R |
+| 401 no login demo | Senha digitada errada | A senha das contas demo é `demo1234` (8 caracteres) |
 | Primeira requisição muito lenta | API dormindo (plano free) | Configurar o monitor do passo 4 |
 | Dados sumiram | API reiniciou (dados em memória) | Esperado no MVP; PostgreSQL resolve na Fase 2 |
 | 404 ao recarregar uma página | Falta de rewrite para SPA | Já resolvido no `vercel.json` |
