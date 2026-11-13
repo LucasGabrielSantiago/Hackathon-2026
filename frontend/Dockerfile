@@ -2,7 +2,7 @@
 # ---------- Recicla PE · Front-end (React + Vite) ----------
 # Build com Node e entrega com Nginx sem privilégios (porta 8080, usuário não-root).
 
-FROM node:22-alpine AS build
+FROM node:25-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --ignore-scripts
