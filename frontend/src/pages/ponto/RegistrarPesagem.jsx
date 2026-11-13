@@ -14,6 +14,15 @@ export default function RegistrarPesagem() {
   const [resultado, setResultado] = useState(null);
   const [erro, setErro] = useState('');
   const [enviando, setEnviando] = useState(false);
+  const [resumo, setResumo] = useState(null);
+  const [codigoPedido, setCodigoPedido] = useState('');
+
+  // Ao digitar o número, mostra o pedido e quem está trazendo o material.
+  async function conferirPedido() {
+    setResumo(null);
+    if (!Number(pedidoId)) return;
+    try { setResumo(await api(`/pedidos/${Number(pedidoId)}/resumo`)); } catch (err) { setResumo({ erro: err.message }); }
+  }
 
   const mudarItem = (i, campo, valor) => setItens(itens.map((it, j) => (j === i ? { ...it, [campo]: valor } : it)));
   const totalKg = itens.reduce((s, i) => s + (numero(i.peso_kg) || 0), 0);
@@ -22,13 +31,13 @@ export default function RegistrarPesagem() {
     e.preventDefault();
     setErro(''); setResultado(null); setEnviando(true);
     const corpo = {
-      ...(modo === 'qr' ? { codigo: codigo.trim() } : { pedido_id: Number(pedidoId) }),
+      ...(modo === 'qr' ? { codigo: codigo.trim() } : { pedido_id: Number(pedidoId), ...(codigoPedido.trim() ? { codigo: codigoPedido.trim() } : {}) }),
       itens: itens.filter((i) => numero(i.peso_kg) > 0).map((i) => ({ material: i.material, peso_kg: numero(i.peso_kg) })),
     };
     try {
       // Idempotency-Key evita crédito duplicado se o botão for tocado duas vezes.
       const r = await api('/entregas', { metodo: 'POST', corpo, headers: { 'Idempotency-Key': crypto.randomUUID() } });
-      setResultado(r); setCodigo(''); setPedidoId(''); setItens([novaLinha()]);
+      setResultado(r); setCodigo(''); setPedidoId(''); setCodigoPedido(''); setResumo(null); setItens([novaLinha()]);
     } catch (err) { setErro(err.message); } finally { setEnviando(false); }
   }
 
@@ -37,7 +46,7 @@ export default function RegistrarPesagem() {
       <h1 className="titulo-1">Receber entrega</h1>
       <div className="rp-abas" role="tablist">
         <button type="button" role="tab" aria-selected={modo === 'qr'} className={`rp-aba${modo === 'qr' ? ' rp-aba-ativa' : ''}`} onClick={() => setModo('qr')}>QR do morador</button>
-        <button type="button" role="tab" aria-selected={modo === 'pedido'} className={`rp-aba${modo === 'pedido' ? ' rp-aba-ativa' : ''}`} onClick={() => setModo('pedido')}>Coleta do coletor</button>
+        <button type="button" role="tab" aria-selected={modo === 'pedido'} className={`rp-aba${modo === 'pedido' ? ' rp-aba-ativa' : ''}`} onClick={() => setModo('pedido')}>Pedido de coleta</button>
       </div>
       <form className="pilha" onSubmit={enviar}>
         {modo === 'qr' ? (
@@ -45,8 +54,26 @@ export default function RegistrarPesagem() {
             <input className="rp-campo" id="codigo" autoCapitalize="characters" value={codigo} onChange={(e) => setCodigo(e.target.value)} required />
             <span className="rp-ajuda">Cada código vale para uma única entrega.</span></div>
         ) : (
-          <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="pedido">Número do pedido</label>
-            <input className="rp-campo" id="pedido" type="number" min="1" inputMode="numeric" value={pedidoId} onChange={(e) => setPedidoId(e.target.value)} required /></div>
+          <>
+            <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="pedido">Número do pedido</label>
+              <input className="rp-campo" id="pedido" type="number" min="1" inputMode="numeric" value={pedidoId} onChange={(e) => { setPedidoId(e.target.value); setResumo(null); }} onBlur={conferirPedido} required />
+              <span className="rp-ajuda">Quem traz o material (coletor ou o próprio morador) informa o número do pedido.</span></div>
+            {resumo?.erro && <Alert tipo="erro" titulo="Pedido não encontrado">{resumo.erro}</Alert>}
+            {resumo && !resumo.erro && (
+              <div className="rp-card">
+                <p className="rp-card-titulo">Pedido #{resumo.id}{resumo.bairro ? ` · ${resumo.bairro}` : ''}</p>
+                <p className="rp-card-texto">{resumo.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material] || m.material} ${m.quantidade_kg} kg`).join(' · ')} (estimado)</p>
+                {resumo.quem_traz === 'coletor' && <Alert tipo="info" titulo={`Trazido pelo coletor ${resumo.coletor_nome || ''}`}>Pese e confirme. O morador recebe a Bolsa Reciclagem e o coletor, a remuneração dele.</Alert>}
+                {resumo.quem_traz === 'morador' && <Alert tipo="info" titulo="Trazido pelo próprio morador">Peça o QR Code do pedido na tela "Pedir coleta" do morador e digite o código abaixo.</Alert>}
+                {resumo.status === 'aceito' && <Alert tipo="aviso" titulo="Coletor a caminho">Um coletor aceitou este pedido. Ele precisa confirmar a coleta antes da entrega.</Alert>}
+                {['entregue', 'cancelado'].includes(resumo.status) && <Alert tipo="aviso" titulo={`Pedido ${resumo.status}`}>Este pedido não pode receber outra entrega.</Alert>}
+              </div>
+            )}
+            {resumo?.quem_traz === 'morador' && (
+              <div className="rp-campo-grupo"><label className="rp-rotulo" htmlFor="codigo-pedido">Código do QR do pedido</label>
+                <input className="rp-campo" id="codigo-pedido" autoCapitalize="characters" value={codigoPedido} onChange={(e) => setCodigoPedido(e.target.value)} required /></div>
+            )}
+          </>
         )}
         <fieldset className="rp-card">
           <legend className="rp-rotulo">Pesagem</legend>
@@ -70,7 +97,7 @@ export default function RegistrarPesagem() {
       {resultado && (
         <div className="rp-card resultado-ok" role="status">
           <p className="rp-card-titulo">Entrega #{resultado.entrega.id} confirmada</p>
-          <p className="rp-card-texto">{(resultado.entrega.peso_total_gramas / 1000).toLocaleString('pt-BR')} kg pesados</p>
+          <p className="rp-card-texto">{(resultado.entrega.peso_total_gramas / 1000).toLocaleString('pt-BR')} kg pesados{resultado.entrega.pedido_id ? ` · pedido #${resultado.entrega.pedido_id}, trazido pelo ${resultado.entrega.entregue_por === 'coletor' ? 'coletor' : 'próprio morador'}` : ''}</p>
           <div className="total"><span>Bolsa Reciclagem (morador)</span><b className="rp-credito">{reais(resultado.entrega.recompensa_centavos)}</b></div>
           {resultado.entrega.remuneracao_catador_centavos !== undefined && (
             <div className="total"><span>Remuneração do coletor</span><b>{reais(resultado.entrega.remuneracao_catador_centavos)}</b></div>

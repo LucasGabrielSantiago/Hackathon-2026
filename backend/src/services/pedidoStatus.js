@@ -22,4 +22,16 @@ function transicionar(pedido, para) {
   return pedido;
 }
 
-module.exports = { TRANSICOES, podeTransicionar, transicionar };
+// Exceção controlada: ninguém aceitou e o PRÓPRIO morador levou o material ao ponto
+// (conferido pelo QR do pedido). Vai de "aberto" direto para "entregue".
+function entregarPeloMorador(pedido) {
+  if (pedido.status !== 'aberto') {
+    throw new ErroNegocio('STATUS_INVALIDO', `Não é possível o morador entregar um pedido "${pedido.status}".`, 409);
+  }
+  pedido.status = 'entregue';
+  pedido.entregue_por = 'morador';
+  pedido.atualizado_em = new Date().toISOString();
+  return pedido;
+}
+
+module.exports = { TRANSICOES, podeTransicionar, transicionar, entregarPeloMorador };

@@ -8,8 +8,8 @@ const criar = (limit, windowMs = 60 * 1000) => rateLimit({
 });
 
 // Geral: 300 por minuto (o acompanhamento consulta a cada 5 s, cerca de 12 por minuto).
-const limiteGeral = criar(300);
+const limiteGeral = criar(Number(process.env.LIMITE_GERAL_POR_MIN) || 300);
 // Pedidos: criar pedido com foto, foto, localização e acompanhamento.
-const limitePedidos = criar(120);
+const limitePedidos = criar(Number(process.env.LIMITE_PEDIDOS_POR_MIN) || 120);
 
 module.exports = { limiteGeral, limitePedidos };

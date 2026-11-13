@@ -157,6 +157,20 @@ router.post('/:id/coletar', autenticar, exigirPerfil('catador'), (req, res) => {
   res.json({ pedido: resto, mensagem: 'Coleta confirmada. Leve o material a um ponto autorizado para pesagem.' });
 });
 
+// Ponto de coleta confere o pedido antes de pesar (sem endereço do morador).
+router.get('/:id/resumo', limitePedidos, autenticar, exigirPerfil('ponto', 'admin'), (req, res) => {
+  const db = getDb();
+  const pedido = buscarPedido(db, req.params.id);
+  res.json({
+    id: pedido.id,
+    status: pedido.status,
+    bairro: db.bairros.find((b) => b.id === pedido.bairro_id)?.nome ?? null,
+    materiais_estimados: pedido.materiais_estimados,
+    coletor_nome: nomeUsuario(db, pedido.catador_usuario_id),
+    quem_traz: pedido.status === 'coletado' ? 'coletor' : pedido.status === 'aberto' ? 'morador' : null,
+  });
+});
+
 // Coletor que aceitou envia a própria posição enquanto vai até o morador.
 router.post('/:id/localizacao', limitePedidos, autenticar, exigirPerfil('catador'), (req, res) => {
   const pedido = buscarPedido(getDb(), req.params.id);
