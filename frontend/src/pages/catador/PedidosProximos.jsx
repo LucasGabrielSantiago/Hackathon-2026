@@ -1,69 +1,47 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../../services/api.js';
-import { NOMES_MATERIAIS, NOMES_STATUS } from '../../utils/formatar.js';
+import Alert from '../../components/common/Alert.jsx';
+import Badge from '../../components/common/Badge.jsx';
+import EmptyState from '../../components/common/EmptyState.jsx';
+import Loading from '../../components/common/Loading.jsx';
+import { NOMES_MATERIAIS } from '../../utils/formatar.js';
+
+export const resumoMateriais = (p) => p.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material]} ${m.quantidade_kg} kg`).join(' · ');
 
 export default function PedidosProximos() {
-  const [proximos, setProximos] = useState([]);
-  const [minhas, setMinhas] = useState([]);
-  const [codigos, setCodigos] = useState({});
+  const [proximos, setProximos] = useState(null);
   const [erro, setErro] = useState('');
   const [msg, setMsg] = useState('');
 
-  async function carregar() {
-    setErro('');
-    try {
-      setProximos((await api('/pedidos/proximos')).pedidos);
-      setMinhas((await api('/pedidos/minhas-coletas')).pedidos);
-    } catch (e) { setErro(e.message); }
-  }
+  const carregar = () => api('/pedidos/proximos').then((d) => setProximos(d.pedidos)).catch((e) => { setErro(e.message); setProximos([]); });
   useEffect(() => { carregar(); }, []);
 
-  async function acao(caminho, corpo, sucesso) {
+  async function aceitar(id) {
     setErro(''); setMsg('');
-    try { await api(caminho, { metodo: 'POST', corpo }); setMsg(sucesso); carregar(); } catch (e) { setErro(e.message); }
+    try { await api(`/pedidos/${id}/aceitar`, { metodo: 'POST' }); setMsg('O endereço aparece em Minhas coletas.'); carregar(); } catch (e) { setErro(e.message); }
   }
 
-  const resumo = (p) => p.materiais_estimados.map((m) => `${NOMES_MATERIAIS[m.material]} ${m.quantidade_kg} kg`).join(', ');
-
   return (
-    <section>
-      <h1>Pedidos de coleta</h1>
-      {erro && <p className="erro" role="alert">{erro}</p>}
-      {msg && <p className="ok" role="status">{msg}</p>}
-
-      <h2>Perto de você</h2>
-      {proximos.length === 0 && <p>Nenhum pedido aberto no momento.</p>}
-      <ul className="lista">
-        {proximos.map((p) => (
-          <li key={p.id} className="cartao">
-            <strong>#{p.id} · {p.bairro}</strong>
-            <span>{resumo(p)} · {p.janela_horario}</span>
-            <button className="botao" type="button" onClick={() => acao(`/pedidos/${p.id}/aceitar`, null, 'Pedido aceito! O endereço aparece em “Minhas coletas”.')}>Aceitar</button>
-          </li>
-        ))}
-      </ul>
-
-      <h2>Minhas coletas</h2>
-      <ul className="lista">
-        {minhas.map((p) => (
-          <li key={p.id} className="cartao">
-            <strong>#{p.id} · {NOMES_STATUS[p.status]}</strong>
-            <span>{p.endereco} · {p.janela_horario}</span>
-            <span>{resumo(p)}</span>
-            {p.status === 'aceito' && (
-              <>
-                <label htmlFor={`cod-${p.id}`}>Código do QR do morador</label>
-                <input id={`cod-${p.id}`} value={codigos[p.id] || ''} onChange={(e) => setCodigos({ ...codigos, [p.id]: e.target.value })} />
-                <div className="acoes">
-                  <button className="botao" type="button" onClick={() => acao(`/pedidos/${p.id}/coletar`, { codigo: codigos[p.id] }, 'Coleta confirmada. Leve ao ponto para pesagem.')}>Confirmar coleta</button>
-                  <button className="botao secundario" type="button" onClick={() => acao(`/pedidos/${p.id}/recusar`, null, 'Pedido devolvido.')}>Desistir</button>
-                </div>
-              </>
-            )}
-            {p.status === 'coletado' && <small>Informe o pedido #{p.id} no ponto de coleta para a pesagem.</small>}
-          </li>
-        ))}
-      </ul>
-    </section>
+    <>
+      <h1 className="titulo-1">Pedidos perto de você</h1>
+      {erro && <Alert tipo="erro" titulo="Algo deu errado">{erro}</Alert>}
+      {msg && <Alert tipo="sucesso" titulo="Pedido aceito">{msg} <Link to="/catador/coletas">Ver coletas</Link></Alert>}
+      {proximos === null ? <Loading /> : proximos.length === 0 ? (
+        <EmptyState titulo="Nenhum pedido aberto agora" texto="Quando um morador do seu bairro pedir coleta, ele aparece aqui." />
+      ) : (
+        <div className="pilha">
+          {proximos.map((p) => (
+            <div key={p.id} className="rp-card">
+              <div className="entre"><p className="rp-card-titulo">#{p.id} · {p.bairro}</p><Badge tipo="aviso">Aberto</Badge></div>
+              <p className="rp-card-texto">{resumoMateriais(p)}</p>
+              <p className="rp-card-texto">{p.janela_horario}</p>
+              <button className="rp-btn rp-btn-primario rp-btn-bloco" type="button" onClick={() => aceitar(p.id)}>Aceitar coleta</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <p className="apoio">O endereço completo só aparece depois que você aceita.</p>
+    </>
   );
 }
