@@ -3,7 +3,7 @@
 Visão completa: [CONTEXT.md §12](../CONTEXT.md).
 
 ```
-frontend/ (React 18 + Vite, Vercel)  ──HTTP/JSON──►  backend/ (Node.js + Express, Render)
+frontend/ (React 18 + Vite, Vercel/Nginx)  ──HTTP/JSON──►  backend/ (Node.js + Express, Render)
                                                       ├── src/routes       → rotas REST (/api/...)
                                                       ├── src/middlewares  → JWT, RBAC, erros, limite de login
                                                       ├── src/services     → regras de negócio puras (testáveis)
@@ -20,6 +20,8 @@ frontend/ (React 18 + Vite, Vercel)  ──HTTP/JSON──►  backend/ (Node.js
 | **Valores em centavos e pesos em gramas** (inteiros) | Evita erro de ponto flutuante em cálculos financeiros |
 | **IA com classificador de reserva** | O app continua funcionando sem chave de API ou se a IA cair |
 | **QR Code digitado/colado** no MVP | Leitura por câmera fica para a Fase 2 |
+| **Render + Vercel** com arquivos versionados (`render.yaml`, `vercel.json`) | Deploy gratuito, automático a partir da `main` e reproduzível |
+| **CORS por lista** (`FRONTEND_URL` separado por vírgula) | Permite produção e testes locais sem abrir a API para qualquer origem |
 
 ## Principais rotas
 

@@ -10,7 +10,13 @@ function criarApp() {
   app.disable('x-powered-by');
   app.set('trust proxy', 1); // atrás do proxy do Render/Docker, para o IP real no limite de login
   app.use(helmet());
-  app.use(cors({ origin: config.frontendUrl === '*' ? true : config.frontendUrl }));
+  app.use(cors({
+    origin(origem, callback) {
+      // Sem Origin (curl, health check) ou lista vazia (desenvolvimento): libera.
+      if (!origem || config.frontendOrigens.length === 0 || config.frontendOrigens.includes(origem)) return callback(null, true);
+      return callback(null, false);
+    },
+  }));
   app.use(express.json({ limit: '100kb' }));
 
   app.get('/', (req, res) => res.json({

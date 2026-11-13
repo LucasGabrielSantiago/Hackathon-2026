@@ -45,6 +45,22 @@ Parar: `docker compose down`
 
 Node.js **22.12+**. Ver o README.
 
+## Deploy
+
+| Parte | Onde | Publica a partir de |
+|---|---|---|
+| API | Render (`render.yaml`) | `main` |
+| App | Vercel (`frontend/vercel.json`) | `main` (PRs geram previews) |
+
+Passo a passo completo: [DEPLOY.md](./DEPLOY.md).
+
+Publicar uma versão (release):
+
+```bash
+# depois que as features estiverem em develop
+# abrir PR: develop → main  →  merge  →  Render e Vercel publicam sozinhos
+```
+
 ## Pipelines
 
 | Workflow | O que faz |

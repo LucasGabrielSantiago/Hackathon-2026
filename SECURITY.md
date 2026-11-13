@@ -9,7 +9,9 @@ Não abra issue pública. Envie um e-mail para a equipe (`<inserir e-mail da equ
 **Código e aplicação**
 - Senhas com hash (bcrypt), JWT com expiração, controle de acesso por perfil (RBAC)
 - Limite de tentativas de login
-- Cabeçalhos de segurança: Helmet na API e CSP/X-Frame-Options no Nginx
+- Cabeçalhos de segurança: Helmet na API e CSP/X-Frame-Options no Nginx (Docker) e na Vercel (`vercel.json`)
+- CORS restrito às origens de `FRONTEND_URL`
+- API não inicia em produção sem `JWT_SECRET` (no Render ele é gerado automaticamente)
 - Valores financeiros calculados só no back-end, com idempotência e livro de transações
 - Imagens enviadas para a IA não são armazenadas; endereço do morador oculto até o catador aceitar (LGPD)
 
@@ -21,6 +23,7 @@ Não abra issue pública. Envie um e-mail para a equipe (`<inserir e-mail da equ
 
 **Containers**
 - Imagens multi-stage, só dependências de produção
+- Imagem da API sem npm, npx, yarn e corepack (só o `node`)
 - Usuário não-root (`node` e `nginx`), sistema de arquivos somente leitura, `cap_drop: ALL`, `no-new-privileges`
 - Healthcheck nos dois serviços
 

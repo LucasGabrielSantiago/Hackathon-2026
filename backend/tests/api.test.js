@@ -138,3 +138,8 @@ test('API envia cabeçalhos de segurança e esconde o framework', async () => {
   assert.strictEqual(resp.headers.get('x-content-type-options'), 'nosniff');
   assert.ok(resp.headers.get('content-security-policy'));
 });
+
+test('CORS: sem FRONTEND_URL configurado (desenvolvimento) aceita a origem', async () => {
+  const resp = await fetch(`${base}/health`, { headers: { Origin: 'http://localhost:5173' } });
+  assert.strictEqual(resp.headers.get('access-control-allow-origin'), 'http://localhost:5173');
+});
